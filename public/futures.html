@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>期貨無限轉倉筆記</title>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <nav class="sitenav" aria-label="網站">
+    <a href="index.html">選擇權筆記</a>
+    <a href="futures.html" aria-current="page">期貨:無限轉倉</a>
+  </nav>
+  <span class="eyebrow">期貨使用者的學習筆記 · 整理自 Threads「無限轉倉」系列</span>
+  <h1>期貨:無限轉倉</h1>
+  <p class="lead">長期持有指數期貨並每月轉倉,再用選擇權管理下跌、盤整與加碼。內容為白話解讀與驗算,數字多為假設值。</p>
+  <nav class="toc" aria-label="章節">
+    <a href="#overview">1 概覽</a>
+    <a href="#down">2 下跌保護</a>
+    <a href="#cc">3 Covered Call</a>
+    <a href="#micro">4 微台價差</a>
+    <a href="#addlow">5 下跌加碼</a>
+    <a href="#addhigh">6 上漲加碼</a>
+    <a href="#view">7 整體分析</a>
+  </nav>
+  <p class="legend"><span class="up"><b>紅 = 賺 / 漲</b></span> · <span class="down"><b>綠 = 賠 / 跌</b></span> · <span class="fillkey">黃色欄位</span> = 要自己填,其餘自動算</p>
+</header>
+
+<section id="overview">
+  <h2>概覽</h2>
+  <div class="note"><b>來源說明:</b>本分頁整理自一位作者在 Threads 的「無限轉倉」系列 01 到 09(內容由你貼上)。「解讀」是我用白話改寫,「驗算」是我自己推導檢查的結果,「注意」是我補充的風險。這不代表背書,也不是投資建議。</div>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li><b>無限轉倉</b>:長期持有指數期貨,每月到期前換到下一個月份(轉倉),把它當成「有槓桿的 ETF」。</li>
+      <li>九篇在回答三件事:跌了怎麼辦(01、02)、盤整時怎麼多賺(03 到 07)、想加碼時怎麼做(08、09)。</li>
+      <li>核心風險只有一個:<b>槓桿</b>。越跌槓桿越高、越漲槓桿越低,每個技巧都在管理這件事。</li>
+    </ul>
+  </div>
+
+  <h3>先懂這些詞</h3>
+  <div class="tablewrap"><table style="min-width:560px">
+    <thead><tr><th>詞</th><th>白話</th></tr></thead>
+    <tbody>
+      <tr><td><b>轉倉</b></td><td>期貨有到期日。到期前把舊月份平倉、買進新月份,讓部位不中斷。</td></tr>
+      <tr><td><b>BP / SP / BC / SC</b></td><td>Buy Put 買進賣權、Sell Put 賣出賣權、Buy Call 買進買權、Sell Call 賣出買權(收權利金)。</td></tr>
+      <tr><td><b>Covered Call(CC)</b></td><td>手上有期貨多單,再賣出 Call 收權利金。多單是 Call 的「掩護」,所以風險比單賣 Call 小。</td></tr>
+      <tr><td><b>穿價</b></td><td>指數漲過你賣出的 Call 履約價,這口 SC 變成價內。</td></tr>
+      <tr><td><b>口數優勢 / 劣勢</b></td><td>SC 的曝險小於期貨多單叫優勢,大於叫劣勢。</td></tr>
+      <tr><td><b>Delta 單位</b></td><td>微台 0.2、小台 1、大台 4。1 口台指選擇權每點 50 元,等於 1 小台的曝險。</td></tr>
+      <tr><td><b>槓桿 L</b></td><td>期貨名目金額 ÷ 帳戶淨值。L = 3 代表指數跌 33%,淨值理論上歸零。</td></tr>
+      <tr><td><b>skew</b></td><td>價外 Put 比同距離的價外 Call 貴的現象,恐慌時更明顯。</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>九篇地圖</h3>
+  <div class="tablewrap"><table style="min-width:600px">
+    <thead><tr><th>篇</th><th>情境</th><th>工具</th><th>一句話</th></tr></thead>
+    <tbody>
+      <tr><td>01、02</td><td>回檔</td><td>買 Put、Put 價差</td><td>初跌用淺價外 Put,恐慌用 Put 價差</td></tr>
+      <tr><td>03、04</td><td>盤整或下跌</td><td>賣 Call(Covered Call)</td><td>把「抱上抱下」變成收入,以及穿價怎麼辦</td></tr>
+      <tr><td>05、06、07</td><td>只有微台</td><td>Call 價差</td><td>沒有微台選擇權,改用價差,並給出公式</td></tr>
+      <tr><td>08</td><td>想低接</td><td>賣 Put、Put 價差</td><td>別乾等回檔,先收權利金</td></tr>
+      <tr><td>09</td><td>上漲</td><td>加碼公式</td><td>漲多槓桿會下降,要按區間加碼</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="down">
+  <h2>01、02 下跌時怎麼保護</h2>
+  <p>作者把回檔分成兩個階段,各階段最好的工具不一樣。共同的邏輯是:<b>保護要趁便宜時買</b>。</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>初跌、剛轉弱 <small>IV 還沒爆高</small></h3>
+      <ul class="plain">
+        <li><b>第一名:買淺價外 Put(BP)</b></li>
+        <li>成本與保護最均衡</li>
+        <li>IV 低、Put 便宜,適合提早建立</li>
+        <li>排最後的是賣 Call:能收錢,但擋不住繼續下跌</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>已跌一大段、恐慌 <small>IV 已高</small></h3>
+      <ul class="plain">
+        <li><b>第一名:Put 價差</b>(買一口 Put,同時賣更低履約價的 Put 補貼成本)</li>
+        <li>IV 高時單買 Put 太貴</li>
+        <li>恐慌時價外 Put 因 skew 特別貴</li>
+        <li>賣價外 Call:權利金肥,但擋不住崩跌</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted small">作者更正:恐慌時補貼成本用的是 SP(賣 Put),不是 BP。</p>
+  <details><summary>看完整排名</summary>
+    <div class="grid g2" style="margin-top:12px">
+      <div><b>初跌排名</b>
+        <ol class="steps"><li>BP 淺價外</li><li>BP 價平</li><li>Buy Put Spread</li><li>BP 深價外</li><li>SC 價外</li><li>SC 價平</li><li>SC 價內</li><li>SC 深價內</li></ol></div>
+      <div><b>恐慌排名</b>
+        <ol class="steps"><li>Buy Put Spread</li><li>BP 價平</li><li>BP 淺價外</li><li>BP 深價外</li><li>SC 價外</li><li>SC 價平</li><li>SC 價內</li><li>SC 深價內</li></ol></div>
+    </div>
+    <p class="muted small" style="margin-top:10px">價內的 SC 雖然降低 Delta,但會鎖死之後的反彈空間,所以越價內排名越後面。</p>
+  </details>
+  <div class="chartwrap"><div id="f-chartA" role="img" aria-label="期貨加 Put 價差的損益示意圖"></div></div>
+  <p class="muted small">示意圖(單位為相對點數):虛線是只有期貨,實線是期貨加 Put 價差。跌到買入的 Put 履約價後損失被擋住,再跌過賣出的 Put 履約價,保護用完,損失又開始增加。</p>
+  <div class="info"><b>注意:</b>買 Put 是持續的保費成本。Put 價差只防「一段」跌幅,崩盤跌過賣出的 Put 履約價就不再有保護。作者的排名來自邏輯與經驗,貼文沒有提供回測。</div>
+</section>
+
+<section id="cc">
+  <h2>03、04 盤整時賣 Call(Covered Call)</h2>
+  <p>作者的想法:無限轉倉平常上下震盪,「抱上抱下像做白工」。Covered Call 把盤整變成收入,代價是上漲會被封頂。</p>
+  <h3>七個步驟</h3>
+  <div class="card">
+    <ol class="steps">
+      <li><b>算總 Delta</b>:微台 0.2、小台 1、大台 4,加總就是你的期貨曝險。例如 1 大台加 2 小台 = 6。</li>
+      <li><b>選週選</b>:週選、週五選或次週選,不要一開始就選月選。短期比較好預測。</li>
+      <li><b>選履約價</b>:參考日 K 以上的轉折高點、起跌點、大量區、缺口、均線。</li>
+      <li><b>算損益兩平</b> = 履約價 + 權利金,通常要大於「當月轉倉成本價」。下跌時建立 SC 要特別注意這點。</li>
+      <li><b>決定口數</b>:SC 與期貨的比例小於 1:1。例如總 Delta 是 6,SC 最多 5 口,上漲時仍有一部分的超額獲利。</li>
+      <li><b>下單</b>:掛單或讓點成交。</li>
+      <li><b>持有等結算</b>:最簡單是一路壓制到歸零(權利金全收);另一種是被穿價,見下方。</li>
+    </ol>
+  </div>
+  <div class="chartwrap"><div id="f-chartB" role="img" aria-label="期貨加 Covered Call 的損益示意圖"></div></div>
+  <p class="muted small">示意圖:虛線是只有期貨,實線是期貨加賣出 Call。履約價以上損益被封頂在「履約價 + 權利金 − 建倉價」。只要這個數大於 0,被穿價也不會賠,只是賺得少。</p>
+  <div class="card">
+    <h3>數字例子(假設)</h3>
+    <ul class="plain num" style="font-size:15px">
+      <li>1 口小台多單,建倉價 46,000</li>
+      <li>賣 1 口週選 Call,履約價 47,000,權利金 150 點 = <span class="up">+7,500</span> 元</li>
+      <li>損益兩平 = 47,000 + 150 = 47,150,大於 46,000,條件成立</li>
+      <li>漲過 47,000 後,整組最多賺 (47,150 − 46,000) × 50 = <span class="up">+57,500</span> 元,不再增加</li>
+      <li>下跌時只有 150 點(7,500 元)的緩衝</li>
+    </ul>
+  </div>
+
+  <h3>04 被穿價怎麼辦</h3>
+  <div class="tablewrap"><table style="min-width:600px">
+    <thead><tr><th>情況</th><th>作者的做法</th><th>白話原因</th></tr></thead>
+    <tbody>
+      <tr><td><b>SC 口數優勢</b><br><span class="muted">SC 少於期貨</span></td><td>不要停損 SC,可以加碼 SC,最好進結算</td><td>SC 進價內後權利金會加速上升,此時停損往往停在很差的位置。期貨的獲利會抵銷,只是少賺。</td></tr>
+      <tr><td><b>SC 等口數</b></td><td>一律進結算</td><td>沒有優勢,不要在中途操作</td></tr>
+      <tr><td><b>SC 口數劣勢</b><br><span class="muted">SC 多於期貨</span></td><td>初學者最該避免。減碼到等口數,記錄虧損</td><td>上漲時 SC 的虧損會超過期貨獲利</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="plain">
+    <li><b>口數優勢時加碼 SC 看法</b>:看反轉就選價內、看盤整選價平、看盤漲選價外。看續急漲則不動作,保留期貨獲利。</li>
+    <li><b>不要對鎖 SC 隨意停損</b>:用反向部位把 SC 的損益鎖住,或在價內中途停損,都容易停在最差位置。</li>
+    <li>如果真要停損,力求在<b>幾乎沒有時間價值</b>時做。</li>
+    <li>結算後 SC 虧損怎麼處理,作者說後續再分享(你貼的九篇沒有這段)。</li>
+  </ul>
+  <div class="info"><b>我的分析:</b>
+    <ul class="plain">
+      <li>「只是少賺不會賠」要<b>同時</b>成立兩個條件:履約價 + 權利金 &gt; 建倉成本,且 SC 口數 ≤ 期貨曝險。有一個不成立,少賺就變成真的賠。</li>
+      <li>上漲被封頂,下跌只有權利金緩衝。所以跌大時 CC 幫助有限,這就是第 01、02 篇要另外買 Put 的原因。</li>
+      <li>「不要停損 SC」是針對口數優勢的情形,不能套用到等口數以上。</li>
+      <li>週選的 Gamma 很大,穿價後權利金劇烈波動,心理壓力大。</li>
+    </ul>
+  </div>
+</section>
+
+<section id="micro">
+  <h2>05、06、07 只有微台時:Call 價差</h2>
+  <p>台指選擇權每點 50 元,微台每點 10 元,<b>1 口選擇權 = 5 口微台</b>。微台不足 5 口時,沒有對應的選擇權可以做 Covered Call,所以作者改用 <b>Call 價差</b>:賣出履約價 S1 的 Call,同時買進更高履約價 S2 的 Call 當保險。這樣最壞虧損固定,不會無限擴大。</p>
+  <div class="tablewrap"><table style="min-width:560px">
+    <thead><tr><th>符號</th><th>意思</th></tr></thead>
+    <tbody>
+      <tr><td class="num">n</td><td>微台口數(小於 5)</td></tr>
+      <tr><td class="num">F</td><td>期貨建倉價</td></tr>
+      <tr><td class="num">S1 / S2</td><td>賣出 Call 的履約價 / 買進 Call 的履約價</td></tr>
+      <tr><td class="num">P</td><td>價差收到的權利金(點)</td></tr>
+      <tr><td class="num">D</td><td>下跌保護:權利金能墊住的點數,D = 5P ÷ n</td></tr>
+      <tr><td class="num">U</td><td>價差最大虧損相當於微台上漲多少點,U = 5(S2 − S1 − P) ÷ n</td></tr>
+      <tr><td class="num">X</td><td>漲過 S2 之後,獲利回到「漲到 S1 時」那麼多的期貨價</td></tr>
+      <tr><td class="num">E</td><td>保護恢復比 = D ÷ (X − F)。越大越好</td></tr>
+    </tbody>
+  </table></div>
+  <div class="card">
+    <h3>作者的結論,翻成白話</h3>
+    <ul class="plain">
+      <li><b>安全條件</b>:n × (S1 − F) ≥ 5 × (S2 − S1 − P)。意思是微台漲到 S1 賺的錢,足夠付價差的最壞虧損。</li>
+      <li><b>保護與犧牲是固定總和</b>:D + U = 5 × (S2 − S1) ÷ n。想多保護就必須多犧牲上漲空間,沒有免費午餐。</li>
+      <li>例:1 口微台、價差 500 點,D + U 一定等於 2,500。想保護 2,000 點,最多只能犧牲 500 點上漲。</li>
+      <li><b>有效成本</b> Feff = F − D,可以理解成把權利金折進建倉價之後的成本。</li>
+      <li>最佳化(找最大的 E)可以用 Excel 解。</li>
+    </ul>
+  </div>
+  <h3>微台 Call 價差試算</h3>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>我的參數(預設是範例)</legend>
+      <div class="fields">
+        <label for="m-n">微台口數 n <input class="fill" id="m-n" type="number" step="1" min="1" inputmode="numeric" value="1"></label>
+        <label for="m-F">建倉價 F <input class="fill" id="m-F" type="number" step="50" inputmode="numeric" value="44000"></label>
+        <label for="m-S1">賣出履約價 S1 <input class="fill" id="m-S1" type="number" step="100" inputmode="numeric" value="46000"></label>
+        <label for="m-S2">買進履約價 S2 <input class="fill" id="m-S2" type="number" step="100" inputmode="numeric" value="46500"></label>
+        <label for="m-P">價差權利金 P(點) <input class="fill" id="m-P" type="number" step="1" inputmode="decimal" value="250"></label>
+      </div>
+    </fieldset>
+    <div class="out" id="m-out" aria-live="polite"></div>
+  </div>
+  <div class="chartwrap"><div id="f-chartD" role="img" aria-label="微台加 Call 價差的損益圖"></div></div>
+  <div class="info"><b>驗算結果:</b>
+    <ul class="plain">
+      <li>式 1 到式 4、式 6 我用損益函數推導,都成立。</li>
+      <li><b>式 5 的正負號疑似寫反</b>:貼文寫 Feff = S1 − 5(S1 − S2) ÷ n。我推出來是 Feff = S1 − 5(S2 − S1) ÷ n。用範例數字代入,貼文的式子會得到 48,500,正確應是 43,500。這只在條件剛好取等號時成立,請向作者確認。</li>
+      <li>組合損益漲過 S1 後的最低點在 S2。作者的安全條件比「剛好不虧」更保守,多留了一段餘裕。</li>
+    </ul>
+  </div>
+  <div class="note"><b>注意:</b>條件成立代表「往上不會虧」,不是「沒有風險」。價格跌破 F − D 還是會虧。而且條件要求 S1 離建倉價夠遠,等於建倉價要低很多(已經有明顯浮盈)才做得起這個價差。</div>
+</section>
+
+<section id="addlow">
+  <h2>08 下跌加碼:賣 Put,別乾等</h2>
+  <p>想低接卻等不到回檔?作者的做法是先<b>賣 Put 收權利金</b>。如果真的跌到履約價,結算的虧損就直接轉成期貨多單的進場價。等於「一張附權利金的限價買單」。</p>
+  <div class="chartwrap"><div id="f-chartC" role="img" aria-label="裸賣 Put 與 Put 價差的損益示意圖"></div></div>
+  <p class="muted small">示意圖:虛線是裸賣 Put,跌越多虧越多。實線是 Put 價差,最大虧損被固定。</p>
+  <div class="tablewrap"><table style="min-width:600px">
+    <thead><tr><th></th><th>裸賣 Put(SP)</th><th>Put 價差</th></tr></thead>
+    <tbody>
+      <tr><td><b>權利金</b></td><td>最多</td><td>較少</td></tr>
+      <tr><td><b>保證金</b></td><td>高</td><td>省</td></tr>
+      <tr><td><b>最大虧損</b></td><td>很大,不固定</td><td>已知</td></tr>
+      <tr><td><b>結算前能否動作</b></td><td>要等結算才能加碼</td><td>可以中途轉成期貨多單</td></tr>
+      <tr><td><b>怕 V 型反轉</b></td><td>怕,會錯過進場點</td><td>比較不怕</td></tr>
+      <tr><td><b>適合情境</b></td><td>接近結算、權利金非常超額(高 IV、逆勢進場)</td><td>一般情況</td></tr>
+    </tbody>
+  </table></div>
+  <div class="card">
+    <h3>作者的評分方式</h3>
+    <ul class="plain">
+      <li>F:理論期貨價,W:價差寬度,K:賣出的 Put 履約價,C:收到權利金。</li>
+      <li><b>損益兩平緩衝</b> D = F − K + C(現價離損益兩平多遠)。</li>
+      <li><b>風險效率</b> E = D ÷ (W − C):每承擔 1 點最大風險,換到多少點保護。</li>
+      <li>在「權利金不低於 Cmin」的前提下找最大的 <span class="num">E × (C ÷ Cmin)^0.5</span>。開根號是讓權利金有權重,但效益遞減,不會一直偏向價平。</li>
+    </ul>
+  </div>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>Put 價差試算(預設是範例)</legend>
+      <div class="fields">
+        <label for="sp-F">理論期貨價 F <input class="fill" id="sp-F" type="number" step="50" inputmode="numeric" value="46000"></label>
+        <label for="sp-K">賣出 Put 履約價 K <input class="fill" id="sp-K" type="number" step="100" inputmode="numeric" value="45000"></label>
+        <label for="sp-W">價差寬度 W <input class="fill" id="sp-W" type="number" step="100" inputmode="numeric" value="500"></label>
+        <label for="sp-C">收到權利金 C(點) <input class="fill" id="sp-C" type="number" step="1" inputmode="decimal" value="150"></label>
+        <label for="sp-Cmin">最低權利金 Cmin <input class="fill" id="sp-Cmin" type="number" step="1" inputmode="decimal" value="100"></label>
+      </div>
+    </fieldset>
+    <div class="out" id="sp-out" aria-live="polite"></div>
+  </div>
+  <div class="info"><b>注意:</b>賣 Put 是在下跌時<b>增加多方曝險</b>。多單已經被套牢時再賣 Put,崩盤時損失會疊加。價差能固定單筆最大虧損,但如果連續加碼,總風險仍會累積。權利金也不是保證:結算時價內的 Put 要付現金。</div>
+</section>
+
+<section id="addhigh">
+  <h2>09 上漲加碼:維持槓桿區間</h2>
+  <p>作者的論點:正二(每日再平衡,維持約 2 倍曝險)設計不好;期貨無限轉倉則是<b>越跌槓桿越高、越漲槓桿越低</b>。漲多了槓桿會自然下降,所以應該依區間加碼,讓槓桿維持在你設定的範圍內。</p>
+  <div class="card">
+    <h3>公式,翻成白話</h3>
+    <ul class="plain">
+      <li><b>淨值</b> E(F) = E0 + n × M × (F − F0)</li>
+      <li><b>槓桿</b> L = n × M × F ÷ E(F)(名目金額 ÷ 淨值)</li>
+      <li>設定區間 Lmin 到 Lmax(例如 2.5 到 3.5)。L 跌到 Lmin 以下就該加碼。</li>
+      <li><b>加碼觸發價</b>:Lmin × (E0 − n×M×F0) ÷ (n×M×(1 − Lmin))</li>
+      <li><b>加碼後不超過 Lmax 的最低價</b>:Lmax × (E0 − n×M×F0) ÷ (M × (n + 1 − n×Lmax))</li>
+      <li>加碼要在這兩個價位之間完成。我驗算過這兩條式子,推導成立。</li>
+    </ul>
+  </div>
+  <h3>加碼區間試算</h3>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>我的部位(預設是範例)</legend>
+      <div class="fields">
+        <label for="lv-E">初始淨值 E0(元) <input class="fill" id="lv-E" type="number" step="10000" inputmode="numeric" value="2300000"></label>
+        <label for="lv-n">目前口數 n <input class="fill" id="lv-n" type="number" step="1" min="1" inputmode="numeric" value="3"></label>
+        <label for="lv-M">契約乘數 M
+          <select class="fill" id="lv-M"><option value="10">微台 10</option><option value="50" selected>小台 50</option><option value="200">大台 200</option></select></label>
+        <label for="lv-F">建倉價 F0 <input class="fill" id="lv-F" type="number" step="50" inputmode="numeric" value="46000"></label>
+        <label for="lv-min">槓桿下限 Lmin <input class="fill" id="lv-min" type="number" step="0.1" inputmode="decimal" value="2.5"></label>
+        <label for="lv-max">槓桿上限 Lmax <input class="fill" id="lv-max" type="number" step="0.1" inputmode="decimal" value="3.5"></label>
+      </div>
+    </fieldset>
+    <div class="out" id="lv-out" aria-live="polite"></div>
+  </div>
+  <div class="tablewrap"><table id="lv-table" style="min-width:560px">
+    <thead><tr><th>第幾次加碼</th><th class="r">目前口數</th><th class="r">價位區間(低 → 高)</th><th class="r">加碼後口數</th><th class="r">觸發價的加碼後槓桿</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="note"><b>注意:</b>表格假設每次都在觸發價加碼。實際要考慮保證金是否足夠、價格跳空、手續費與稅。加碼價位低於這個區間會讓槓桿太高,高於區間就超過了作者建議的時機。</div>
+</section>
+
+<section id="view">
+  <h2>我的整體分析</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>這套方法成立的前提</h3>
+      <ul class="plain">
+        <li>標的長期向上(台股指數)</li>
+        <li>有足夠的現金緩衝,不會被強制平倉</li>
+        <li>懂結算、保證金、Delta 與口數的算法</li>
+        <li>能照規則執行,不臨時改變</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>主要風險</h3>
+      <ul class="plain">
+        <li><b>爆倉</b>:槓桿 3 倍,跌約 33% 淨值理論上歸零,實務上更早被強制平倉</li>
+        <li><b>賣方風險</b>:SC、SP 都是賣方,損失可能很大</li>
+        <li><b>跳空與夜盤</b>:停損來不及執行</li>
+        <li><b>越跌越加碼</b>:08 的做法在崩盤時是疊加風險</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <h3>九篇貼文沒有提供的資訊</h3>
+    <ul class="plain">
+      <li>回測資料與最大回撤</li>
+      <li>實際的保證金需求與追繳規則</li>
+      <li>轉倉成本(正價差與逆價差)、手續費、期交稅</li>
+      <li>「輾壓正二」缺乏數據:槓桿 2.5 到 3.5 倍本來就比 2 倍風險高,不能只比報酬</li>
+    </ul>
+  </div>
+  <div class="info"><b>給你的建議路徑:</b>你已經會做期貨,可以先把這頁當作學習材料。先在選擇權部分的模擬環境理解 Covered Call 與價差的損益,再用一口小台或微台試單。槓桿的規劃最重要:先決定你能承受的最大跌幅,再反推最高槓桿。這是教學資訊,不構成投資建議,是否採用請自行判斷。</div>
+</section>
+
+<footer>
+  <span>本頁為教學整理,不構成投資建議。期貨與賣出選擇權的損失可能超過本金,請只使用賠掉也不影響生活的資金。</span>
+  <span>契約規格、保證金與結算規則會調整,請以期交所與宏遠證券最新公告為準。</span>
+  <span>內容來源:作者在 Threads 的「無限轉倉」系列貼文 01 到 09;驗算與註解為本頁整理。</span>
+</footer>
+
+</div>
+
+<script>
+/* ---------- 期貨:無限轉倉 ---------- */
+(function(){
+  var g=function(id){return document.getElementById(id);};
+  var fmt=function(n){return Math.round(n).toLocaleString('en-US');};
+  var sgn=function(n){var r=Math.round(n);return (r>0?'+':(r<0?'−':''))+Math.abs(r).toLocaleString('en-US');};
+  var cls=function(n){return n>0?'up':(n<0?'down':'');};
+  var nv=function(id,d){var v=parseFloat(g(id).value);return isNaN(v)?d:v;};
+  function nice(lo,hi,cnt){
+    var raw=(hi-lo)/cnt; if(raw<=0) return [lo];
+    var p=Math.pow(10,Math.floor(Math.log10(raw))), m=raw/p, st=(m<=1?1:(m<=2?2:(m<=5?5:10)))*p, out=[];
+    for(var v=Math.ceil(lo/st)*st; v<=hi+1e-9; v+=st) out.push(v);
+    return out;
+  }
+  function chart(id,o){
+    var el=g(id); if(!el) return;
+    var W=o.W||560,H=o.H||260,ml=o.ml||56,mr=o.mr||16,mt=24,mb=44;
+    var xs=function(x){return ml+(x-o.x0)/(o.x1-o.x0)*(W-ml-mr);};
+    var ys=function(y){return mt+(o.y1-y)/(o.y1-o.y0)*(H-mt-mb);};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" style="min-width:'+(o.minw||460)+'px;display:block;width:100%;height:auto" aria-hidden="true">';
+    (o.yt||[]).forEach(function(t){ s+='<line class="'+(t[0]===0?'axis0':'axis')+'" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+ys(t[0])+'" y2="'+ys(t[0])+'"/>'+(t[1]!==''?'<text class="tick" x="'+(ml-8)+'" y="'+(ys(t[0])+4)+'" text-anchor="end">'+t[1]+'</text>':''); });
+    (o.xt||[]).forEach(function(t){ s+='<line class="axis" x1="'+xs(t[0])+'" x2="'+xs(t[0])+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke-dasharray="2 4"/><text class="tick" x="'+xs(t[0])+'" y="'+(H-mb+16)+'" text-anchor="middle">'+t[1]+'</text>'; });
+    s+='<text class="cap" x="'+(ml+(W-ml-mr)/2)+'" y="'+(H-6)+'" text-anchor="middle">'+o.xl+'</text><text class="cap" x="'+(ml-8)+'" y="'+(mt-8)+'" text-anchor="end">'+o.yl+'</text>';
+    o.series.forEach(function(se){ s+='<polyline class="'+se.cls+'" points="'+se.pts.map(function(p){return xs(p[0]).toFixed(1)+','+ys(p[1]).toFixed(1);}).join(' ')+'"/>'; });
+    (o.texts||[]).forEach(function(t){ s+='<text class="lbl2" style="font-size:13px;font-weight:700;fill:var(--fg)" x="'+(xs(t.x)+(t.dx||0))+'" y="'+(ys(t.y)+(t.dy||0))+'" text-anchor="'+(t.a||'start')+'">'+t.t+'</text>'; });
+    (o.marks||[]).forEach(function(m){ s+='<circle class="dot" cx="'+xs(m.x)+'" cy="'+ys(m.y)+'" r="5"/>'; });
+    el.innerHTML=s+'</svg>';
+  }
+  var ZERO=[[0,'0']];
+  /* A: 期貨 + Put 價差 */
+  chart('f-chartA',{x0:80,x1:120,y0:-20,y1:22,yt:ZERO,xt:[[87,'賣出 Put'],[95,'買入 Put'],[100,'建倉價']],xl:'指數(相對點數)',yl:'損益',
+    series:[{cls:'ld',pts:[[80,-20],[120,20]]},{cls:'l3',pts:[[80,-14],[87,-7],[95,-7],[120,18]]}],
+    texts:[{x:119,y:20,t:'只有期貨',a:'end',dy:-10},{x:119,y:18,t:'期貨 + Put 價差',a:'end',dy:36},{x:91,y:-7,t:'保護區:損失被擋住',a:'middle',dy:-12}]});
+  /* B: 期貨 + Covered Call */
+  chart('f-chartB',{x0:80,x1:120,y0:-22,y1:24,yt:ZERO,xt:[[100,'建倉價'],[108,'履約價']],xl:'指數(相對點數)',yl:'損益',
+    series:[{cls:'ld',pts:[[80,-20],[120,20]]},{cls:'l2',pts:[[80,-17],[108,11],[120,11]]}],
+    texts:[{x:119,y:20,t:'只有期貨',a:'end',dy:-10},{x:119,y:11,t:'封頂',a:'end',dy:24}]});
+  /* C: 裸 SP vs Put 價差 */
+  chart('f-chartC',{x0:80,x1:120,y0:-18,y1:10,yt:ZERO,xt:[[92,'買入 Put'],[100,'賣出 Put 履約價']],xl:'指數(相對點數)',yl:'損益',
+    series:[{cls:'ld',pts:[[80,-16],[100,4],[120,4]]},{cls:'l1',pts:[[80,-4],[92,-4],[100,4],[120,4]]}],
+    texts:[{x:80,y:-16,t:'裸賣 Put:跌越多虧越多',a:'start',dx:6,dy:-8},{x:80,y:-4,t:'價差:最大虧損固定',a:'start',dx:6,dy:-8}]});
+
+  /* D: 微台 Call 價差 */
+  function renderMicro(){
+    var n=Math.max(1,nv('m-n',1)),F=nv('m-F',44000),S1=nv('m-S1',46000),S2=nv('m-S2',46500),P=nv('m-P',250),W=S2-S1;
+    if(!(W>0)){ g('m-out').innerHTML='<div class="note">買進履約價 S2 要大於賣出履約價 S1。</div>'; g('f-chartD').innerHTML=''; return; }
+    var T=function(S){ return 10*n*(S-F)+50*P-50*Math.max(0,Math.min(S-S1,W)); };
+    var maxLoss=50*(W-P), gainS1=10*n*(S1-F), ok=gainS1>=maxLoss;
+    var D=5*P/n, U=5*(W-P)/n, X=S1+5*W/n, Feff=F-D, E=(X-F)>0?D/(X-F):0, tmin=T(S2);
+    var rows=[
+      ['價差收到權利金',sgn(50*P)+' 元',cls(1)],
+      ['價差最大虧損','−'+fmt(maxLoss)+' 元','down'],
+      ['微台漲到 S1 的獲利',sgn(gainS1)+' 元',cls(gainS1)],
+      ['安全條件(獲利 ≥ 最大虧損)',ok?'成立':'不成立',ok?'up':'down'],
+      ['漲過 S1 後的最低點(在 S2)',sgn(tmin)+' 元',cls(tmin)],
+      ['下跌保護 D = 5P ÷ n',fmt(D)+' 點',''],
+      ['上漲犧牲 U',fmt(U)+' 點',''],
+      ['D + U = 5(S2−S1) ÷ n',fmt(D+U)+' 點',''],
+      ['有效成本 Feff = F − D',fmt(Feff),''],
+      ['追回價 X = S1 + 5(S2−S1) ÷ n',fmt(X),''],
+      ['保護恢復比 E = D ÷ (X−F)',(Math.round(E*100)/100)+'','']
+    ];
+    var html=rows.map(function(r){ return '<div class="row" style="grid-template-columns:minmax(0,1fr) auto"><span>'+r[0]+'</span><span class="num '+r[2]+'"><b>'+r[1]+'</b></span></div>'; }).join('');
+    if(n>=5) html+='<div class="note">n 達 5 口以上,微台曝險已可對應 1 口選擇權,可以直接做 Covered Call。</div>';
+    g('m-out').innerHTML=html;
+    var x0=Math.min(F-D-400,F-600), x1=S2+Math.max(600,W);
+    var pts=[[x0,T(x0)],[F,T(F)],[S1,T(S1)],[S2,T(S2)],[x1,T(x1)]];
+    var pure=[[x0,10*n*(x0-F)],[x1,10*n*(x1-F)]];
+    var all=pts.concat(pure).map(function(p){return p[1];});
+    var lo=Math.min.apply(null,all.concat([0])), hi=Math.max.apply(null,all.concat([0]));
+    var pad=(hi-lo)*0.14, y0=lo-pad, y1=hi+pad;
+    var yt=nice(y0,y1,5).map(function(v){return [v,(Math.round(v/1000)/10)+'萬'];});
+    var xt=[[F,'F'],[S1,'S1'],[S2,'S2']];
+    chart('f-chartD',{W:620,H:300,x0:x0,x1:x1,y0:y0,y1:y1,yt:yt,xt:xt,xl:'到期指數',yl:'損益(元)',minw:520,
+      series:[{cls:'ld',pts:pure},{cls:'l1',pts:pts}],
+      texts:[{x:x1,y:10*n*(x1-F),t:'只有微台',a:'end',dy:-10},{x:S1,y:T(S1),t:'微台 + Call 價差',a:'middle',dy:-12}],
+      marks:[{x:F-D,y:0}]});
+  }
+  ['m-n','m-F','m-S1','m-S2','m-P'].forEach(function(id){ g(id).addEventListener('input',renderMicro); });
+  renderMicro();
+
+  /* 08: Put 價差 */
+  function renderSP(){
+    var F=nv('sp-F',46000),K=nv('sp-K',45000),W=nv('sp-W',500),C=nv('sp-C',150),Cm=Math.max(1,nv('sp-Cmin',100));
+    var be=K-C, D=F-K+C, risk=W-C;
+    var rows=[
+      ['損益兩平價 K − C',fmt(be),''],
+      ['損益兩平緩衝 D = F − K + C',fmt(D)+' 點',''],
+      ['最大獲利 50 × C',sgn(50*C)+' 元','up'],
+      ['最大虧損 50 × (W − C)',risk>0?'−'+fmt(50*risk)+' 元':'—','down']
+    ];
+    if(risk>0){
+      var E=D/risk, sc=E*Math.sqrt(Math.max(C,0)/Cm);
+      rows.push(['風險效率 E = D ÷ (W − C)',(Math.round(E*100)/100)+'','']);
+      rows.push(['評分 E × (C ÷ Cmin)^0.5',(Math.round(sc*100)/100)+(C<Cm?'(低於 Cmin,不合格)':''),'']);
+    }
+    g('sp-out').innerHTML=rows.map(function(r){ return '<div class="row" style="grid-template-columns:minmax(0,1fr) auto"><span>'+r[0]+'</span><span class="num '+r[2]+'"><b>'+r[1]+'</b></span></div>'; }).join('')+(risk<=0?'<div class="note">收到的權利金不能大於等於價差寬度,請檢查 W 與 C。</div>':'');
+  }
+  ['sp-F','sp-K','sp-W','sp-C','sp-Cmin'].forEach(function(id){ g(id).addEventListener('input',renderSP); });
+  renderSP();
+
+  /* 09: 槓桿加碼 */
+  function renderLev(){
+    var E=nv('lv-E',2300000),n=Math.max(1,Math.round(nv('lv-n',3))),M=nv('lv-M',50),Fr=nv('lv-F',46000),Lmin=nv('lv-min',2.5),Lmax=nv('lv-max',3.5);
+    var L0=n*M*Fr/E, fall=1/L0;
+    var rows=[
+      ['目前槓桿 L',(Math.round(L0*100)/100)+' 倍',''],
+      ['淨值歸零的理論跌幅 1 ÷ L',(Math.round(fall*1000)/10)+'%','down'],
+      ['上限 Lmax 對應的理論跌幅',(Math.round(100/Lmax*10)/10)+'%','down']
+    ];
+    var warn='';
+    if(!(Lmin>1) || !(Lmax>Lmin)) warn='請確認 Lmin 大於 1,且 Lmax 大於 Lmin。';
+    else if(L0<=1) warn='目前槓桿不超過 1 倍,這套加碼公式不適用。';
+    else if(L0<Lmin) warn='目前槓桿已經低於 Lmin,現在就屬於可加碼的狀態。';
+    g('lv-out').innerHTML=rows.map(function(r){ return '<div class="row" style="grid-template-columns:minmax(0,1fr) auto"><span>'+r[0]+'</span><span class="num '+r[2]+'"><b>'+r[1]+'</b></span></div>'; }).join('')+(warn?'<div class="note">'+warn+'</div>':'');
+    var tb='';
+    if(!warn || L0<Lmin){
+      if(Lmin>1 && Lmax>Lmin && L0>1){
+        var cn=n, cE=E, cF=Fr;
+        for(var k=1;k<=5;k++){
+          var base=cE-cn*M*cF; if(!(base<0)) break;
+          var trig=Lmin*base/(cn*M*(1-Lmin));
+          var den=M*(cn+1-cn*Lmax), fmin=den<0?Lmax*base/den:NaN;
+          var Et=cE+cn*M*(trig-cF), La=(cn+1)*M*trig/Et;
+          tb+='<tr><td class="num">'+k+'</td><td class="r num">'+cn+'</td><td class="r num">'+(isNaN(fmin)?'—':fmt(fmin))+' → '+fmt(trig)+'</td><td class="r num">'+(cn+1)+'</td><td class="r num">'+(Math.round(La*100)/100)+'</td></tr>';
+          cE=Et; cn++; cF=trig;
+        }
+      }
+    }
+    g('lv-table').querySelector('tbody').innerHTML=tb||'<tr><td colspan="5" class="muted">請先調整參數。</td></tr>';
+  }
+  ['lv-E','lv-n','lv-M','lv-F','lv-min','lv-max'].forEach(function(id){ g(id).addEventListener('input',renderLev); g(id).addEventListener('change',renderLev); });
+  renderLev();
+})();
+
+/* ---------- 分頁 ---------- */
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var ids=tabs.map(function(a){return a.getAttribute('href').slice(1);});
+  var secs=ids.map(function(id){return document.getElementById(id);});
+  var nav=document.querySelector('nav.toc');
+  function show(id,scroll){
+    var i=ids.indexOf(id); if(i<0) i=0;
+    secs.forEach(function(s,k){ s.hidden = (k!==i); });
+    tabs.forEach(function(a,k){ if(k===i){ a.setAttribute('aria-current','page'); a.scrollIntoView({block:'nearest',inline:'center'}); } else { a.removeAttribute('aria-current'); } });
+    try{ history.replaceState(null,'','#'+ids[i]); }catch(e){}
+    if(scroll){ nav.scrollIntoView({block:'start'}); }
+  }
+  tabs.forEach(function(a){
+    a.addEventListener('click',function(ev){ ev.preventDefault(); show(a.getAttribute('href').slice(1),true); });
+  });
+  secs.forEach(function(s,k){
+    var d=document.createElement('div'); d.className='pager';
+    var prev=document.createElement('button'); prev.type='button';
+    var next=document.createElement('button'); next.type='button';
+    if(k>0){ prev.textContent='← '+tabs[k-1].textContent; prev.addEventListener('click',function(){ show(ids[k-1],true); }); } else { prev.hidden=true; }
+    if(k<secs.length-1){ next.textContent=tabs[k+1].textContent+' →'; next.addEventListener('click',function(){ show(ids[k+1],true); }); } else { next.hidden=true; }
+    d.appendChild(prev); d.appendChild(next); s.appendChild(d);
+  });
+  window.addEventListener('hashchange',function(){ show(location.hash.slice(1),false); });
+  show(location.hash.slice(1),false);
+})();
+</script>
+</body>
+</html>

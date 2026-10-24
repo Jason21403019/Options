@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>選擇權入門筆記</title>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <nav class="sitenav" aria-label="網站">
+    <a href="index.html" aria-current="page">選擇權筆記</a>
+    <a href="futures.html">期貨:無限轉倉</a>
+  </nav>
+  <span class="eyebrow">臺指選擇權(TXO)· 期貨使用者的學習筆記</span>
+  <h1>選擇權入門筆記</h1>
+  <p class="lead">範例以指數 46,000 點為基準(約 2026/10/22 收盤)。權利金與希臘字母是推估的假設值,實際以看盤軟體為準。</p>
+  <nav class="toc" aria-label="章節">
+    <a href="#concept">1 基本概念</a>
+    <a href="#greeks">2 三個希臘字母</a>
+    <a href="#regime">3 多空與盤整</a>
+    <a href="#calc">4 損益計算機</a>
+    <a href="#plan">5 欄位與開盤前規劃</a>
+    <a href="#reversal">6 力竭反向操作</a>
+    <a href="#practice">7 第一週練習</a>
+  </nav>
+  <p class="legend"><span class="up"><b>紅 = 賺 / 漲</b></span> · <span class="down"><b>綠 = 賠 / 跌</b></span> · <span class="fillkey">黃色欄位</span> = 要自己填,其餘自動算</p>
+</header>
+
+<!-- 1 -->
+<section id="concept">
+  <h2>基本概念</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>買方先付權利金,最大虧損就是權利金,不會被追繳。</li>
+      <li>台指選擇權每點 <span class="num">50</span> 元,報價 200 點 = <span class="num">10,000</span> 元。</li>
+      <li>時間價值每天流失:價平那一檔,指數沒動也會賠掉整筆權利金。</li>
+    </ul>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Call(買權)<small>看漲</small></h3>
+      <ul class="plain"><li>到期指數高於履約價才有價值</li><li>獲利沒有上限</li></ul>
+      <div class="pay"><svg viewBox="0 0 300 150" role="img" aria-label="Call 買方到期損益示意圖">
+        <line class="axis0" x1="10" x2="290" y1="80" y2="80"/>
+        <line class="axis" x1="140" x2="140" y1="14" y2="128" stroke-dasharray="3 4"/>
+        <polyline class="l1" points="20,120 140,120 280,20"/>
+        <circle class="dot" cx="196" cy="80" r="4"/>
+        <text class="cap" x="204" y="100" text-anchor="start">損益兩平</text>
+        <text class="cap" x="140" y="144" text-anchor="middle">履約價</text>
+        <text class="cap" x="22" y="110">最大虧損 = 權利金</text>
+        <text class="cap" x="150" y="34">獲利沒有上限</text>
+      </svg></div></div>
+    <div class="card"><h3>Put(賣權)<small>看跌</small></h3>
+      <ul class="plain"><li>到期指數低於履約價才有價值</li><li>指數跌越多賺越多</li></ul>
+      <div class="pay"><svg viewBox="0 0 300 150" role="img" aria-label="Put 買方到期損益示意圖">
+        <line class="axis0" x1="10" x2="290" y1="80" y2="80"/>
+        <line class="axis" x1="160" x2="160" y1="14" y2="128" stroke-dasharray="3 4"/>
+        <polyline class="l3" points="20,20 160,120 280,120"/>
+        <circle class="dot" cx="104" cy="80" r="4"/>
+        <text class="cap" x="98" y="100" text-anchor="end">損益兩平</text>
+        <text class="cap" x="160" y="144" text-anchor="middle">履約價</text>
+        <text class="cap" x="278" y="110" text-anchor="end">最大虧損 = 權利金</text>
+        <text class="cap" x="22" y="14">指數越跌賺越多</text>
+      </svg></div></div>
+  </div>
+
+  <h3>填入三檔你想觀察的 Call</h3>
+  <fieldset class="fillset">
+    <legend>我的三檔 Call(預設是推估值,請抄 T 字報價的賣價)</legend>
+    <div class="fields">
+      <label for="k1">履約價 1 <input class="fill" id="k1" type="number" step="100" inputmode="numeric" value="45000"></label>
+      <label for="p1">權利金 1(點) <input class="fill" id="p1" type="number" step="1" inputmode="decimal" value="1270"></label>
+      <label for="k2">履約價 2 <input class="fill" id="k2" type="number" step="100" inputmode="numeric" value="46000"></label>
+      <label for="p2">權利金 2(點) <input class="fill" id="p2" type="number" step="1" inputmode="decimal" value="650"></label>
+      <label for="k3">履約價 3 <input class="fill" id="k3" type="number" step="100" inputmode="numeric" value="47000"></label>
+      <label for="p3">權利金 3(點) <input class="fill" id="p3" type="number" step="1" inputmode="decimal" value="270"></label>
+    </div>
+  </fieldset>
+
+  <h3>價內、價平、價外</h3>
+  <div class="card">
+    <div class="slider-row">
+      <label for="idx-num" style="flex:none">目前指數
+        <input class="fill" id="idx-num" type="number" step="100" inputmode="numeric" value="46000" style="width:170px"></label>
+      <input type="range" id="idx" min="43000" max="53000" step="100" value="46000" aria-label="目前指數滑桿">
+    </div>
+    <div class="tablewrap"><table id="itm-table">
+      <thead><tr><th>履約價</th><th>Call 狀態</th><th class="r">Call 內含價值</th><th>Put 狀態</th><th class="r">Put 內含價值</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <ul class="plain small">
+      <li>Call:履約價低於指數是價內。Put 相反。</li>
+      <li>相差不到 50 點視為價平。</li>
+      <li>內含價值 = 現在立刻履約的價差,價外為 0。</li>
+    </ul>
+  </div>
+
+  <h3>到期損益圖(各買 1 口)</h3>
+  <div class="chartwrap" id="payoff" role="img" aria-label="三檔 Call 的到期損益折線圖"></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>類型</th><th class="r">履約價</th><th class="r">權利金</th><th class="r">成本(元)</th><th class="r">損益兩平</th><th>特性</th></tr></thead>
+    <tbody id="cost-body"></tbody>
+  </table></div>
+  <ul class="plain small">
+    <li>縱軸是持有到期的損益(元),未含手續費與稅。</li>
+    <li>損益兩平 = 履約價 + 權利金(Call)。</li>
+  </ul>
+  <div class="info"><b>數量感:</b>指數 4 萬點以上,1 口價平約 3 萬元以上。先算 1 口的成本與停損金額,超出預算就改選價外或價差。</div>
+</section>
+
+<!-- 2 -->
+<section id="greeks">
+  <h2>三個希臘字母</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>買方要賺錢:方向對、動作夠快、別買在 IV 最高的時候。</li>
+      <li>每個字母下面的圖,顯示權利金如何受它影響(以指數 46,000、價平 Call 為例,數字為假設)。</li>
+    </ul>
+  </div>
+  <div class="tablewrap"><table style="min-width:560px">
+    <thead><tr><th>字母</th><th>衡量什麼</th><th>買方何時受益</th><th>影響最大的位置</th></tr></thead>
+    <tbody>
+      <tr><td><b>Delta</b></td><td>指數動 1 點,權利金動幾點</td><td>方向看對,且指數動得夠多</td><td>價內</td></tr>
+      <tr><td><b>Theta</b></td><td>每過 1 天,權利金掉幾點</td><td>對買方永遠是損耗(賣方受益)</td><td>價平、接近到期</td></tr>
+      <tr><td><b>Vega</b></td><td>IV 變 1%,權利金動幾點</td><td>IV 上升時</td><td>價平、到期日遠</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid g3">
+    <div class="card">
+      <h3>Delta <small>跟著指數跑</small></h3>
+      <div class="mini" id="g-delta"></div>
+      <p class="muted small">曲線是價平 Call 的 Delta:價外接近 0,價內接近 1,Put 是它的鏡像(負值)。</p>
+      <ul class="plain">
+        <li>價內 Call:接近 <span class="num">+1</span>,像期貨</li>
+        <li>價平 Call:約 <span class="num">+0.5</span></li>
+        <li>價外 Call:<span class="num">+0.1 ~ +0.3</span></li>
+        <li>Put 是負的,<span class="num">−1 ~ 0</span></li>
+      </ul>
+      <p class="muted small">價平 Delta 0.5 約等於每點 25 元曝險,約 1/8 口大台。</p>
+    </div>
+    <div class="card">
+      <h3>Theta <small>每天被收走多少</small></h3>
+      <div class="mini" id="g-theta"></div>
+      <p class="muted small">橫軸往右是越接近到期,曲線越陡,代表最後幾天每天掉得最多。</p>
+      <ul class="plain">
+        <li>買方吃虧,賣方受益</li>
+        <li>價平最大</li>
+        <li>越接近到期越快</li>
+        <li>週選比月選快很多</li>
+      </ul>
+      <details><summary>看損耗數字</summary>
+        <div class="tablewrap"><table style="min-width:0">
+          <thead><tr><th>剩餘天數</th><th class="r">每天約流失</th></tr></thead>
+          <tbody>
+            <tr><td>30 天</td><td class="r num">約 15 點</td></tr>
+            <tr><td>14 天</td><td class="r num">約 23 點</td></tr>
+            <tr><td>7 天</td><td class="r num">約 33 點</td></tr>
+            <tr><td>最後 1~2 天</td><td class="r num">約 60~90 點</td></tr>
+          </tbody>
+        </table></div>
+        <p class="muted small">以指數 46,000、權利金約 650 點的價平選擇權為例(假設值)。</p>
+      </details>
+    </div>
+    <div class="card">
+      <h3>Vega <small>預期波動的影響</small></h3>
+      <div class="mini" id="g-vega"></div>
+      <p class="muted small">線的斜率就是 Vega:剩 14 天約 36 點/1%,剩 45 天約 64 點/1%。</p>
+      <ul class="plain">
+        <li>IV 越高,Call 和 Put 都越貴</li>
+        <li>價平最大,到期日越遠越大</li>
+        <li>大事件前 IV 墊高,事件後常下降</li>
+        <li>急跌時 IV 升,反彈時 IV 降</li>
+      </ul>
+      <p class="muted small">急跌買 Put:Delta 與 Vega 同時幫你。緩漲買 Call:Vega 稍微拖累。</p>
+    </div>
+  </div>
+
+  <details><summary>進階:Gamma(Delta 自己怎麼變)</summary>
+    <ul class="plain">
+      <li>往有利方向走,Delta 變大,賺得越來越快。</li>
+      <li>反方向則 Delta 變小,賠得越來越慢。</li>
+      <li>價平附近、接近到期時 Gamma 最大。</li>
+    </ul>
+    <div class="tablewrap"><table>
+      <thead><tr><th>指數</th><th class="r">45,400</th><th class="r">45,600</th><th class="r">45,800</th><th class="r">46,000</th><th class="r">46,200</th><th class="r">46,400</th><th class="r">46,600</th></tr></thead>
+      <tbody><tr><td>Delta</td><td class="r num">0.35</td><td class="r num">0.40</td><td class="r num">0.45</td><td class="r num"><b>0.50</b></td><td class="r num">0.55</td><td class="r num">0.60</td><td class="r num">0.65</td></tr></tbody>
+    </table></div>
+    <p class="muted small">假設價平 Call 的 Gamma 約 0.00025:Delta ≈ 0.5 + 0.00025 × 指數變動。</p>
+  </details>
+</section>
+
+<!-- 3 -->
+<section id="regime">
+  <h2>多頭、空頭、盤整</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>趨勢行情:買方靠 Delta 賺錢,但行情要夠快才蓋得過 Theta。</li>
+      <li>盤整:買方最不利,新手少做或縮小部位。</li>
+    </ul>
+  </div>
+  <div class="grid g3">
+    <div class="card">
+      <h3>多頭趨勢</h3>
+      <svg class="trend" viewBox="0 0 120 40" aria-hidden="true"><polyline points="4,34 26,28 44,31 70,18 92,21 116,6" stroke="var(--up)"/></svg>
+      <ul class="plain">
+        <li><b>做法</b>:買價平或小幅價內 Call,到期日 2 週以上</li>
+        <li><b>Delta</b>:主要獲利來源,越漲越賺</li>
+        <li><b>Theta</b>:每天損耗,行情要夠快</li>
+        <li><b>Vega</b>:上漲時 IV 常降,扣掉一部分獲利</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>空頭急跌</h3>
+      <svg class="trend" viewBox="0 0 120 40" aria-hidden="true"><polyline points="4,6 24,12 40,10 66,26 88,24 116,36" stroke="var(--down)"/></svg>
+      <ul class="plain">
+        <li><b>做法</b>:買 Put,賺到要適時了結</li>
+        <li><b>Delta</b>:下跌直接賺</li>
+        <li><b>Theta</b>:急跌賺得快,通常蓋過</li>
+        <li><b>Vega</b>:IV 飆升有利;反彈後快速回落</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>盤整區間</h3>
+      <svg class="trend" viewBox="0 0 120 40" aria-hidden="true"><polyline points="4,22 22,10 40,30 60,12 80,28 100,14 116,22" stroke="var(--muted)"/></svg>
+      <ul class="plain">
+        <li><b>做法</b>:買方少做;賣方有利但突破時風險大</li>
+        <li><b>Delta</b>:一下賺一下賠,互相抵銷</li>
+        <li><b>Theta</b>:每天固定流失,最不利</li>
+        <li><b>Vega</b>:IV 持續下滑會再扣一次</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>有期貨部位時</h3>
+      <ul class="plain"><li>趨勢明確、期貨已賺錢:買價外 Put 當保險</li><li>履約價別選太近,保費才不會太貴</li><li>盤整且 IV 偏高:保費貴,不一定划算</li></ul></div>
+    <div class="card"><h3>新手的順序</h3>
+      <ul class="plain"><li>先只當買方、只買 1 口、價平附近</li><li>熟悉 Theta 與 IV 後,再考慮價差</li><li>賣方放最後</li></ul></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="calc">
+  <h2>損益計算機</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>權利金變多少,由四項加總:Delta、Gamma、Theta、Vega。</li>
+      <li>先看例子,再用黃色欄位代入你的數字。</li>
+    </ul>
+  </div>
+  <div class="formula">新權利金 ≈ 舊權利金 + Delta × 指數變動 + ½ × Gamma × 指數變動² + Theta × 天數 + Vega × IV 變動</div>
+
+  <h3>例 A:買價平 Call,漲 400 點</h3>
+  <div class="card">
+    <p class="muted small">權利金 650,Delta 0.5,Gamma 0.00025,Theta −23/天,Vega 35。經過 2 天,指數 +400,IV −2%。</p>
+    <ul class="plain num" style="list-style:none;padding:0;font-size:15px">
+      <li>Delta:0.5 × 400 = <span class="up">+200</span></li>
+      <li>Gamma:½ × 0.00025 × 400² = <span class="up">+20</span></li>
+      <li>Theta:−23 × 2 = <span class="down">−46</span></li>
+      <li>Vega:35 × (−2) = <span class="down">−70</span></li>
+      <li><b>合計 <span class="up">+104</span> 點 = <span class="up">+5,200</span> 元</b></li>
+    </ul>
+    <p class="muted small">不含 Gamma 是 +84 點。指數動越大,Gamma 越不能省。</p>
+  </div>
+  <details><summary>更多例子:急跌買 Put、盤整五天</summary>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="card">
+        <h3>例 B:買價平 Put,急殺 600 點</h3>
+        <p class="muted small">Delta −0.5,其餘同上。1 天,指數 −600,IV +5%。</p>
+        <ul class="plain num" style="list-style:none;padding:0;font-size:15px">
+          <li>Delta:−0.5 × (−600) = <span class="up">+300</span></li>
+          <li>Gamma:½ × 0.00025 × 600² = <span class="up">+45</span></li>
+          <li>Theta:−23 × 1 = <span class="down">−23</span></li>
+          <li>Vega:35 × 5 = <span class="up">+175</span></li>
+          <li><b>合計 <span class="up">+497</span> 點 = <span class="up">+24,850</span> 元</b></li>
+        </ul>
+        <p class="muted small">急跌時 Delta 與 Vega 同向,獲利比單看指數大。</p>
+      </div>
+      <div class="card">
+        <h3>例 C:盤整五天,指數沒動</h3>
+        <ul class="plain">
+          <li>Delta、Gamma、Vega 都是 0</li>
+          <li>只剩 Theta:−23 × 5 = <span class="down num">−115 點 = −5,750 元</span></li>
+          <li>看對區間、看錯突破,時間也會收走錢</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <h3>自己代入看看</h3>
+  <div class="presets">
+    <button type="button" data-preset="A">載入例 A</button>
+    <button type="button" data-preset="B">載入例 B</button>
+    <button type="button" data-preset="C">載入例 C</button>
+  </div>
+  <div class="calc">
+    <div class="stack">
+      <fieldset class="fillset">
+        <legend>你的選擇權(從看盤軟體抄)</legend>
+        <div class="fields">
+          <label for="c-type">類型
+            <select class="fill" id="c-type"><option value="call">Call</option><option value="put">Put</option></select></label>
+          <label for="c-S">現在指數 <input class="fill" id="c-S" type="number" inputmode="decimal" value="46000"></label>
+          <label for="c-K">履約價 <input class="fill" id="c-K" type="number" inputmode="decimal" value="46000"></label>
+          <label for="c-prem">權利金(點) <input class="fill" id="c-prem" type="number" inputmode="decimal" value="650"></label>
+          <label for="c-delta">Delta <input class="fill" id="c-delta" type="number" step="0.01" inputmode="decimal" value="0.5"></label>
+          <label for="c-gamma">Gamma <input class="fill" id="c-gamma" type="number" step="0.00001" inputmode="decimal" value="0.00025"></label>
+          <label for="c-theta">Theta(每天,點) <input class="fill" id="c-theta" type="number" step="0.1" inputmode="decimal" value="-23"></label>
+          <label for="c-vega">Vega(每 1% IV) <input class="fill" id="c-vega" type="number" step="0.1" inputmode="decimal" value="35"></label>
+          <label for="c-qty">口數 <input class="fill" id="c-qty" type="number" min="1" step="1" inputmode="numeric" value="1"></label>
+        </div>
+      </fieldset>
+      <fieldset class="fillset">
+        <legend>你想模擬的情境(自己假設)</legend>
+        <div class="fields">
+          <label for="s-dS">指數變動(點) <input class="fill" id="s-dS" type="number" inputmode="decimal" value="400"></label>
+          <label for="s-days">經過天數 <input class="fill" id="s-days" type="number" min="0" step="1" inputmode="numeric" value="2"></label>
+          <label for="s-iv">IV 變動(%) <input class="fill" id="s-iv" type="number" step="0.5" inputmode="decimal" value="-2"></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="stack">
+      <div class="out" id="breakdown" aria-live="polite"></div>
+      <div class="total" aria-live="polite">
+        <span class="muted small" id="newprem"></span>
+        <span class="big" id="pl-yuan"></span>
+        <span class="muted small" id="pl-note"></span>
+      </div>
+    </div>
+  </div>
+
+  <h3>情境對照表(損益,元)</h3>
+  <div class="tablewrap"><table id="grid-table">
+    <thead><tr><th>指數變動</th><th class="r">當天</th><th class="r">3 天後</th><th class="r">7 天後</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="note"><b>限制:</b>這是近似算法,適合小到中等幅度的變動。天數拉長、漲跌幅很大時,實際價格會有落差。只拿來建立直覺,下單前以實際報價為準。</div>
+</section>
+
+<!-- 5 -->
+<section id="plan">
+  <h2>欄位與開盤前規劃</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>規則(比例、口數、劇本)可以開盤前定好。</li>
+      <li>價位(權利金、Delta 等)開盤後才代入。</li>
+      <li>盤中只更新:現在指數、權利金,大幅波動時再抄 Delta。</li>
+    </ul>
+  </div>
+
+  <h3>計算機的黃色欄位怎麼填</h3>
+  <div class="tablewrap"><table style="min-width:640px">
+    <thead><tr><th>欄位</th><th>會變嗎</th><th>怎麼填</th></tr></thead>
+    <tbody>
+      <tr><td><b>現在指數</b></td><td>隨時變</td><td>看盤軟體即時價。進場前抄一次,模擬情境改「指數變動」即可。</td></tr>
+      <tr><td><b>權利金(點)</b></td><td>隨時變,最快</td><td>填預計成交價。買進看賣價(Ask),別用成交價。</td></tr>
+      <tr><td><b>Delta</b></td><td>隨指數、時間、IV 變</td><td>抄該檔的 Delta。Call 正、Put 負,計算機會自動修正。指數大動或到期前一週再重抄。</td></tr>
+      <tr><td><b>Gamma</b></td><td>價平、近到期變最快</td><td>有欄位就抄;沒有就用預設或填 0,影響主要在大幅波動時。</td></tr>
+      <tr><td><b>Theta</b></td><td>變化慢</td><td>抄「每天」損耗。若是整週或年化要換算。正負號打錯沒關係。</td></tr>
+      <tr><td><b>Vega</b></td><td>變化慢</td><td>抄「IV 每變 1%」的點數,確認單位。</td></tr>
+      <tr><td><b>履約價</b></td><td>不變</td><td>事先從 T 字報價挑好。</td></tr>
+      <tr><td><b>口數</b></td><td>你決定</td><td>用下面的進場計畫表算最大口數。</td></tr>
+      <tr><td><b>指數變動、天數、IV 變動</b></td><td>你的假設</td><td>想像情境,例如「漲 400 點、2 天、IV −2%」。</td></tr>
+    </tbody>
+  </table></div>
+  <div class="info"><b>快速檢查:</b>價平 Call 的 Delta 約 0.5,價平 Put 約 −0.5。價平 Delta 遠高於 0.6,多半抄到價內那一檔。</div>
+
+  <h3>進場計畫表</h3>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>我的計畫(預設是範例)</legend>
+      <div class="fields">
+        <label for="pl-prem">預計進場權利金(點) <input class="fill" id="pl-prem" type="number" step="1" inputmode="decimal" value="650"></label>
+        <label for="pl-sl">停損比例(%) <input class="fill" id="pl-sl" type="number" step="1" inputmode="decimal" value="45"></label>
+        <label for="pl-tp">第一停利比例(%) <input class="fill" id="pl-tp" type="number" step="1" inputmode="decimal" value="50"></label>
+        <label for="pl-risk">這筆願賠金額(元) <input class="fill" id="pl-risk" type="number" step="100" inputmode="numeric" value="16000"></label>
+      </div>
+    </fieldset>
+    <div class="out" id="plan-out" aria-live="polite"></div>
+  </div>
+
+  <h3>開盤前可以先做的事</h3>
+  <div class="card">
+    <ul class="plain">
+      <li>看夜盤與消息,決定今天的劇本:偏多、偏空,或觀望。</li>
+      <li>挑 2 到 3 檔候選合約,先看成交量與買賣價差。</li>
+      <li>用進場計畫表算好停損點、停利點、口數。</li>
+      <li>設好價位提醒。向宏遠確認有沒有條件單(停損、觸價、OCO)。</li>
+      <li>一律用限價單,不用市價單。</li>
+      <li>開盤前 15 分鐘價差大、跳動快,新手可先觀察。</li>
+    </ul>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>可以事先規劃</h3>
+      <ul class="plain"><li>今天的劇本、候選合約</li><li>停損與停利的比例</li><li>口數的算法、價位提醒</li></ul></div>
+    <div class="card"><h3>要開盤後才知道</h3>
+      <ul class="plain"><li>實際權利金與 Delta、Theta、Vega</li><li>跳空後的指數位置,事先算的價位要重算</li></ul></div>
+  </div>
+  <div class="note"><b>時間與下單:</b>日盤約 8:45 到 13:45,夜盤約 15:00 到隔天 5:00(以期交所公告為準)。預先委託時間與條件單規則請問宏遠。條件單遇到跳空或價差大,可能滑價。</div>
+</section>
+
+<!-- 6 -->
+<section id="reversal">
+  <h2>力竭反向操作</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>逆勢勝率通常不高,重點是每次賠得起、賺到時賺得夠。</li>
+      <li>等「右側確認」再進,先用小部位。</li>
+      <li>進場前先定好停損與口數。</li>
+    </ul>
+  </div>
+
+  <h3>圖解:多方力竭時的進場位置</h3>
+  <div class="chartwrap">
+    <svg viewBox="0 0 580 210" style="min-width:480px" role="img" aria-label="多方力竭後跌破前低再進場的示意圖">
+      <polyline class="l1" points="20,190 70,165 100,172 150,130 180,138 230,96 258,104 300,58 330,66 360,34 385,52 400,78 430,96 460,104 500,140 540,160"/>
+      <line class="dash" x1="300" x2="560" y1="70" y2="70"/>
+      <line class="dash" x1="360" x2="560" y1="24" y2="24"/>
+      <text class="cap" x="558" y="64" text-anchor="end">前低(確認線)</text>
+      <text class="cap" x="558" y="18" text-anchor="end">停損線:再創新高</text>
+      <circle class="num-c" cx="360" cy="34" r="11"/><text class="num-t" x="360" y="39" text-anchor="middle">1</text>
+      <circle class="num-c" cx="394" cy="70" r="11"/><text class="num-t" x="394" y="75" text-anchor="middle">2</text>
+      <circle class="num-c" cx="540" cy="160" r="11"/><text class="num-t" x="540" y="165" text-anchor="middle">3</text>
+      <text class="cap" x="20" y="206">時間 →</text>
+    </svg>
+  </div>
+  <div class="legend-row">
+    <span><b>1 力竭訊號</b>:創高但爆量長上影、背離</span>
+    <span><b>2 右側確認</b>:跌破前低才進場買 Put</span>
+    <span><b>3 分批停利</b>:賺 50%~100% 先落袋</span>
+  </div>
+  <p class="muted small">空方力竭則上下顛倒:創低出現訊號、站回前高才買 Call。進場後若指數再創新高(新低),就是訊號失敗,出場。</p>
+
+  <h3>兩種「力竭」</h3>
+  <div class="grid g2">
+    <div class="card">
+      <h3>動能力竭</h3>
+      <ul class="plain">
+        <li>K 棒實體縮小</li>
+        <li>爆量卻漲(跌)不動,長上(下)影</li>
+        <li>RSI 或 MACD 與價格背離</li>
+        <li>與均線乖離異常大</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>籌碼與情緒力竭</h3>
+      <ul class="plain">
+        <li>Put/Call 比極端</li>
+        <li>台指 IV(VIX)極端</li>
+        <li>三大法人期貨未平倉</li>
+        <li>各履約價未平倉量分布</li>
+      </ul>
+      <p class="muted small">期交所可查,固定看同一個來源。</p>
+    </div>
+  </div>
+
+  <h3>訊號檢查表</h3>
+  <p class="muted">範例,請改成自己的標準。至少 3 項、且包含右側確認,才值得開一筆小部位。</p>
+  <div class="grid g2">
+    <div class="card" data-group="top">
+      <h3>多方力竭:想買 Put</h3>
+      <label class="check"><input type="checkbox"><span>與 20 日均線乖離拉大到歷史偏高</span></label>
+      <label class="check"><input type="checkbox"><span>創高但成交量或 RSI 沒跟著創高(背離)</span></label>
+      <label class="check"><input type="checkbox"><span>爆量長上影線,或創高後收黑吞噬</span></label>
+      <label class="check"><input type="checkbox"><span>市場一面倒看多、IV 在低檔</span></label>
+      <label class="check"><input type="checkbox" data-confirm="1"><span><b>右側確認:</b>跌破前一日低點或短期均線</span></label>
+      <div class="score" data-score>已符合 <b>0</b> / 5 · 右側確認:<span class="confirm">未</span></div>
+    </div>
+    <div class="card" data-group="bottom">
+      <h3>空方力竭:想買 Call</h3>
+      <label class="check"><input type="checkbox"><span>與 20 日均線向下乖離過大</span></label>
+      <label class="check"><input type="checkbox"><span>創低但量縮或 RSI 底背離</span></label>
+      <label class="check"><input type="checkbox"><span>爆量長下影線,或創低後收紅吞噬</span></label>
+      <label class="check"><input type="checkbox"><span>恐慌明顯:IV 急升(此時 Call 也貴)</span></label>
+      <label class="check"><input type="checkbox" data-confirm="1"><span><b>右側確認:</b>站回前一日高點或短期均線</span></label>
+      <div class="score" data-score>已符合 <b>0</b> / 5 · 右側確認:<span class="confirm">未</span></div>
+    </div>
+  </div>
+
+  <h3>用選擇權怎麼表達</h3>
+  <div class="tablewrap"><table style="min-width:640px">
+    <thead><tr><th>方式</th><th>做法</th><th>好處</th><th>代價</th></tr></thead>
+    <tbody>
+      <tr><td><b>單買 Put / Call</b></td><td>價平或小幅價外,到期日 2 週以上</td><td>簡單,最大虧損固定</td><td>要付 Theta;抄底買 Call 常遇高 IV</td></tr>
+      <tr><td><b>借方價差</b></td><td>買價平、賣更價外(同月)</td><td>成本、Theta、Vega 較低</td><td>獲利有上限</td></tr>
+      <tr><td><b>貸方價差</b><br><span class="muted">進階</span></td><td>多方力竭:賣價外 Call 並買更價外 Call 保護(空方反之)</td><td>時間站在你這邊</td><td>最大虧損大於收入,要保證金。先不要用</td></tr>
+      <tr><td><b>搭配期貨</b></td><td>期貨多單 + 買 Put</td><td>是保險,不是賭反轉</td><td>保費是持續成本</td></tr>
+    </tbody>
+  </table></div>
+  <div class="info"><b>摸頭與摸底不一樣:</b>
+    <ul class="plain">
+      <li>頂部 IV 通常偏低,買 Put 較便宜,急跌時 IV 還會上升。</li>
+      <li>底部多在恐慌後,IV 已高,買 Call 偏貴,反彈後 IV 回落還會扣分。抄底可考慮借方價差,或等右側確認。</li>
+    </ul>
+  </div>
+
+  <h3>資金與出場規則(範例)</h3>
+  <div class="grid g2">
+    <div class="card">
+      <h3>進場前先決定</h3>
+      <ul class="plain">
+        <li><b>單次最大虧損</b>:例如帳戶的 1%~2%</li>
+        <li><b>口數</b> = 願賠金額 ÷(權利金 × 50 × 停損比例)</li>
+        <li>分兩次進場,<b>不攤平</b></li>
+        <li>到期日留 2 週以上</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>出場(任一成立就動作)</h3>
+      <ul class="plain">
+        <li><b>價格停損</b>:權利金虧 40%~50%,或指數創新高(低)</li>
+        <li><b>時間停損</b>:3 個交易日沒動靜</li>
+        <li><b>停利</b>:賺 50%~100%。1 口就整口出場,2 口以上可先賣一半</li>
+        <li>連續停損 3 次,暫停一週</li>
+      </ul>
+    </div>
+  </div>
+  <details><summary>看試算範例</summary>
+    <div class="stack" style="margin-top:12px">
+      <p>指數 46,000 連漲後爆量長黑並跌破前日低點(3 項訊號含右側確認)。買 1 口剩約 3 週的價平 Put,權利金 <span class="num">700</span> 點,成本 <span class="num">35,000</span> 元。</p>
+      <ul class="plain num" style="font-size:15px">
+        <li>停損 45%:剩 385 點出場,每口虧 <span class="down">−15,750</span> 元</li>
+        <li>願賠 16,000 元 ÷ 15,750 ≈ 1 口</li>
+        <li>停利 1,050 點(+50%):每口賺 <span class="up">+17,500</span> 元</li>
+      </ul>
+      <p class="muted small">如果 15,750 元超過你的願賠金額,代表價平 Put 對資金太大,應改選更便宜的價外或價差,而不是加大停損。</p>
+    </div>
+  </details>
+
+  <h3>常見的坑</h3>
+  <ul class="plain">
+    <li><b>強趨勢不逆勢</b>:沒有右側確認,最容易連續停損。</li>
+    <li><b>單一訊號不夠</b>:只代表機率變了,不代表今天轉折。</li>
+    <li><b>事件前 IV 貴</b>:事件後 IV 下降,方向對也賺很少。</li>
+    <li><b>週選最後兩天</b>:Gamma 大、跳動劇烈,新手避開。</li>
+    <li><b>別自己打架</b>:期貨與反向選擇權並存時,先確認是避險還是加碼賭反轉。</li>
+    <li><b>流動性差</b>:太價外的履約價價差大,進出先賠一段。</li>
+  </ul>
+</section>
+
+<!-- 7 -->
+<section id="practice">
+  <h2>第一週練習清單</h2>
+  <div class="card">
+    <label class="check"><input type="checkbox"><span>向宏遠確認:選擇權手續費、下單軟體、有沒有模擬帳號</span></label>
+    <label class="check"><input type="checkbox"><span>打開 T 字報價,找出價內、價平、價外的 Call 與 Put,記下權利金</span></label>
+    <label class="check"><input type="checkbox"><span>叫出 Delta、Theta、Vega 欄位,記下價平那一檔的數字</span></label>
+    <label class="check"><input type="checkbox"><span>盤中觀察三種履約價各動多少,對照 Delta</span></label>
+    <label class="check"><input type="checkbox"><span>連續幾天看同一檔,記錄指數沒動時每天掉多少(Theta)</span></label>
+    <label class="check"><input type="checkbox"><span>大事件或急跌時,記錄 IV 前後的變化(Vega)</span></label>
+    <label class="check"><input type="checkbox"><span>用模擬單做 3 次進出,寫下進場理由、停損、結果</span></label>
+    <label class="check"><input type="checkbox"><span>決定實單的最大虧損金額與口數上限(先 1 口)</span></label>
+  </div>
+  <p class="muted small">勾選只保留在目前頁面,重新整理後會清空。</p>
+</section>
+
+<footer>
+  <span>本頁為教學整理,不構成投資建議。買方最大虧損雖限於權利金,仍可能短時間內全部虧掉,請只用賠掉也不影響生活的資金。</span>
+  <span>契約規格、手續費、保證金與週選結算規則會調整,請以期交所與宏遠證券最新公告為準。</span>
+  <span>參考:<a href="https://www.taifex.com.tw/cht/2/tXO" target="_blank" rel="noopener">期交所 臺指選擇權契約規格</a>、<a href="https://statementdog.com/taiex" target="_blank" rel="noopener">財報狗 加權指數(2026/10/22 收盤約 46,041)</a></span>
+</footer>
+
+</div>
+
+
+<script>
+(function(){
+  var fmt = function(n){ return Math.round(n).toLocaleString('en-US'); };
+  var sgn = function(n){ var r = Math.round(n*10)/10; return (r>0?'+':(r<0?'−':'')) + Math.abs(r).toLocaleString('en-US'); };
+  var cls = function(n){ return n>0 ? 'up' : (n<0 ? 'down' : ''); };
+
+  /* ---------- 1. 價內價外與損益圖 ---------- */
+  var g = function(id){return document.getElementById(id);};
+  function nv(id,def){ var v=parseFloat(g(id).value); return isNaN(v)?def:v; }
+  var idx = g('idx'), idxNum = g('idx-num');
+  function status(type, S, K){
+    if(Math.abs(S-K)<50) return ['價平','atm'];
+    if(type==='call') return S>K ? ['價內','itm'] : ['價外','otm'];
+    return S<K ? ['價內','itm'] : ['價外','otm'];
+  }
+  function legs(){ return [1,2,3].map(function(i){ return {K:nv('k'+i,0), P:Math.max(0,nv('p'+i,0)), c:i}; }).filter(function(o){return o.K>0;}); }
+  function curS(){ return nv('idx-num', +idx.value); }
+  function renderItm(){
+    var S=curS();
+    var rows = legs().map(function(o){
+      var c = status('call',S,o.K), p = status('put',S,o.K);
+      var ci = Math.max(S-o.K,0), pi = Math.max(o.K-S,0);
+      return '<tr><td class="num">'+fmt(o.K)+'</td>'+
+        '<td><span class="pill '+c[1]+'">'+c[0]+'</span></td><td class="r num">'+fmt(ci)+' 點</td>'+
+        '<td><span class="pill '+p[1]+'">'+p[0]+'</span></td><td class="r num">'+fmt(pi)+' 點</td></tr>';
+    }).join('');
+    g('itm-table').querySelector('tbody').innerHTML = rows;
+  }
+  function renderCost(){
+    var S=curS();
+    var trait={itm:'貴,走勢接近期貨,勝率較高',atm:'居中,Delta 約 0.5,新手練習用',otm:'便宜,勝率低,像買彩券'};
+    g('cost-body').innerHTML = legs().map(function(o){
+      var st=status('call',S,o.K);
+      return '<tr><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td class="r num">'+fmt(o.K)+'</td><td class="r num">'+(Math.round(o.P*10)/10)+'</td><td class="r num">'+fmt(o.P*50)+'</td><td class="r num">'+fmt(o.K+o.P)+'</td><td>'+trait[st[1]]+'</td></tr>';
+    }).join('');
+  }
+  function renderPayoff(){
+    var L=legs(), S=curS();
+    if(!L.length){ g('payoff').innerHTML='<p class="muted">請先填入履約價。</p>'; return; }
+    var W=640,H=380,ml=64,mr=108,mt=20,mb=44;
+    var Ks=L.map(function(o){return o.K;});
+    var xmin=Math.min(43000,Math.floor((Math.min.apply(null,Ks)-1000)/1000)*1000);
+    var xmax=Math.max(53000,Math.ceil((Math.max.apply(null,Ks)+1000)/1000)*1000);
+    var f=function(o,x){return (Math.max(x-o.K,0)-o.P)*50;};
+    var lo=0,hi=0;
+    L.forEach(function(o){ lo=Math.min(lo,f(o,xmin),f(o,xmax)); hi=Math.max(hi,f(o,xmin),f(o,xmax)); });
+    var ymax=hi*1.05, ymin=lo*1.12;
+    if(ymax<=0) ymax=10000;
+    ymin=Math.min(ymin,-ymax*0.05);
+    var raw=(ymax-ymin)/5, steps=[5000,10000,20000,50000,100000,200000,500000], step=steps[steps.length-1];
+    for(var i=0;i<steps.length;i++){ if(steps[i]>=raw){ step=steps[i]; break; } }
+    var xs=function(x){return ml+(x-xmin)/(xmax-xmin)*(W-ml-mr);};
+    var ys=function(y){return mt+(ymax-y)/(ymax-ymin)*(H-mt-mb);};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" aria-hidden="true">';
+    for(var y=Math.ceil(ymin/step)*step; y<=ymax; y+=step){
+      s+='<line class="'+(y===0?'axis0':'axis')+'" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+ys(y)+'" y2="'+ys(y)+'"/>';
+      s+='<text class="tick" x="'+(ml-8)+'" y="'+(ys(y)+4)+'" text-anchor="end">'+(Math.round(y/1000)/10)+'萬</text>';
+    }
+    var xstep=(xmax-xmin)>8000?2000:1000;
+    for(var x=xmin;x<=xmax;x+=xstep){
+      s+='<line class="axis" x1="'+xs(x)+'" x2="'+xs(x)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke-dasharray="2 4"/>';
+      s+='<text class="tick" x="'+xs(x)+'" y="'+(H-mb+16)+'" text-anchor="middle">'+fmt(x)+'</text>';
+    }
+    s+='<text class="cap" x="'+ml+'" y="'+(H-6)+'">到期指數</text>';
+    s+='<text class="cap" x="'+(ml-8)+'" y="'+(mt-6)+'" text-anchor="end">損益(元)</text>';
+    var labs=[];
+    L.forEach(function(o){
+      var pts=xs(xmin)+','+ys(f(o,xmin));
+      if(o.K>xmin && o.K<xmax) pts+=' '+xs(o.K)+','+ys(-o.P*50);
+      pts+=' '+xs(xmax)+','+ys(f(o,xmax));
+      s+='<polyline class="l'+o.c+'" points="'+pts+'"/>';
+      labs.push({c:o.c,py:ys(f(o,xmax)),name:status('call',S,o.K)[0]+' '+fmt(o.K)});
+    });
+    labs.sort(function(a,b){return a.py-b.py;});
+    for(var j=1;j<labs.length;j++){ if(labs[j].py-labs[j-1].py<15) labs[j].py=labs[j-1].py+15; }
+    labs.forEach(function(l){ s+='<text class="lbl t'+l.c+'" x="'+(xs(xmax)+8)+'" y="'+(l.py+4)+'">'+l.name+'</text>'; });
+    s+='</svg>';
+    g('payoff').innerHTML=s;
+  }
+  function renderAll(){ renderItm(); renderCost(); renderPayoff(); }
+  idx.addEventListener('input',function(){ idxNum.value=idx.value; renderAll(); });
+  idxNum.addEventListener('input',function(){ var v=parseFloat(idxNum.value); if(!isNaN(v)) idx.value=v; renderAll(); });
+  [1,2,3].forEach(function(i){ g('k'+i).addEventListener('input',renderAll); g('p'+i).addEventListener('input',renderAll); });
+  renderAll();
+
+  /* ---------- 4. 損益計算機 ---------- */
+  var $ = function(id){return document.getElementById(id);};
+  function val(id){ var v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
+  function estimate(p, dS, days, dIV){
+    var theta = -Math.abs(p.theta);
+    var parts = {
+      delta: p.delta*dS,
+      gamma: 0.5*p.gamma*dS*dS,
+      theta: theta*days,
+      vega: p.vega*dIV
+    };
+    var raw = parts.delta+parts.gamma+parts.theta+parts.vega;
+    var newPrem = Math.max(p.prem+raw, 0);
+    return {parts:parts, raw:raw, newPrem:newPrem, pl:newPrem-p.prem, floored:(p.prem+raw)<0};
+  }
+  function readP(){
+    var type=$('c-type').value, d=val('c-delta');
+    d = type==='put' ? -Math.abs(d) : Math.abs(d);
+    return {type:type,S:val('c-S'),K:val('c-K'),prem:val('c-prem'),delta:d,gamma:Math.abs(val('c-gamma')),theta:val('c-theta'),vega:val('c-vega'),qty:Math.max(1,Math.round(val('c-qty'))||1)};
+  }
+  function renderCalc(){
+    var p=readP(), dS=val('s-dS'), days=Math.max(0,val('s-days')), dIV=val('s-iv');
+    var r=estimate(p,dS,days,dIV);
+    var items=[['Delta 項',r.parts.delta],['Gamma 項',r.parts.gamma],['Theta 項',r.parts.theta],['Vega 項',r.parts.vega]];
+    var maxA=Math.max(1,Math.abs(r.parts.delta),Math.abs(r.parts.gamma),Math.abs(r.parts.theta),Math.abs(r.parts.vega));
+    var html=items.map(function(it){
+      var w=Math.min(50,Math.abs(it[1])/maxA*50);
+      var pos=it[1]>=0;
+      var style=pos?('left:50%;width:'+w+'%;background:var(--up)'):('right:50%;width:'+w+'%;background:var(--down)');
+      return '<div class="row"><span>'+it[0]+'</span><span class="num '+cls(it[1])+'">'+sgn(it[1])+' 點</span><span class="bar"><i style="'+style+'"></i></span></div>';
+    }).join('');
+    $('breakdown').innerHTML=html;
+    var yuan=r.pl*50*p.qty;
+    $('newprem').textContent='估算權利金 '+fmt(p.prem)+' → '+(Math.round(r.newPrem*10)/10)+' 點('+sgn(r.pl)+' 點 × 50 元 × '+p.qty+' 口)';
+    var el=$('pl-yuan'); el.textContent=sgn(yuan)+' 元'; el.className='big '+cls(yuan);
+    var note='';
+    if(r.floored) note='估算結果低於 0,權利金最低只會是 0,損失以成本為上限。';
+    else if(Math.abs(dS)>1000) note='指數變動很大,近似誤差會變高,僅供參考。';
+    $('pl-note').textContent=note;
+    // grid
+    var dsList=[-600,-400,-200,0,200,400,600], dayList=[0,3,7];
+    var rows=dsList.map(function(d){
+      var tds=dayList.map(function(dd){
+        var e=estimate(p,d,dd,dIV); var y=e.pl*50*p.qty;
+        return '<td class="r num '+cls(y)+'">'+sgn(y)+'</td>';
+      }).join('');
+      return '<tr><td class="num">'+(d>0?'+':(d<0?'−':''))+Math.abs(d)+' 點</td>'+tds+'</tr>';
+    }).join('');
+    document.querySelector('#grid-table tbody').innerHTML=rows;
+  }
+  ['c-type','c-S','c-K','c-prem','c-delta','c-gamma','c-theta','c-vega','c-qty','s-dS','s-days','s-iv'].forEach(function(id){
+    $(id).addEventListener('input',renderCalc);
+    $(id).addEventListener('change',renderCalc);
+  });
+  var presets={
+    A:{type:'call',delta:0.5,dS:400,days:2,iv:-2},
+    B:{type:'put',delta:0.5,dS:-600,days:1,iv:5},
+    C:{type:'call',delta:0.5,dS:0,days:5,iv:0}
+  };
+  document.querySelectorAll('[data-preset]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var o=presets[b.getAttribute('data-preset')];
+      $('c-type').value=o.type; $('c-delta').value=o.delta;
+      $('c-S').value=46000; $('c-K').value=46000; $('c-prem').value=650;
+      $('c-gamma').value=0.00025; $('c-theta').value=-23; $('c-vega').value=35; $('c-qty').value=1;
+      $('s-dS').value=o.dS; $('s-days').value=o.days; $('s-iv').value=o.iv;
+      renderCalc();
+    });
+  });
+  renderCalc();
+
+  /* ---------- 進場計畫表 ---------- */
+  function renderPlan(){
+    var prem=val('pl-prem'), sl=val('pl-sl')/100, tp=val('pl-tp')/100, risk=val('pl-risk');
+    var cost=prem*50;
+    var slPrem=prem*(1-sl), lossPer=(prem-slPrem)*50;
+    var tpPrem=prem*(1+tp), gainPer=(tpPrem-prem)*50;
+    var lots=lossPer>0?Math.floor(risk/lossPer):0;
+    var rr=lossPer>0?gainPer/lossPer:0;
+    var rows=[
+      ['每口成本',fmt(cost)+' 元',''],
+      ['停損權利金',(Math.round(slPrem*10)/10)+' 點','down'],
+      ['每口停損虧損','−'+fmt(lossPer)+' 元','down'],
+      ['第一停利權利金',(Math.round(tpPrem*10)/10)+' 點','up'],
+      ['每口停利獲利','+'+fmt(gainPer)+' 元','up'],
+      ['報酬風險比',(Math.round(rr*100)/100)+' : 1',''],
+      ['依願賠金額,最多可買',lots+' 口','']
+    ];
+    var html=rows.map(function(r){
+      return '<div class="row" style="grid-template-columns:150px minmax(0,1fr)"><span>'+r[0]+'</span><span class="num '+r[2]+'"><b>'+r[1]+'</b></span></div>';
+    }).join('');
+    if(lossPer>0 && lots<1) html+='<div class="note"><b>注意:</b>願賠金額不到 1 口的停損虧損。請改選較便宜的價外或價差合約,或調高願賠金額前先想清楚能不能承受。</div>';
+    $('plan-out').innerHTML=html;
+  }
+  ['pl-prem','pl-sl','pl-tp','pl-risk'].forEach(function(id){ $(id).addEventListener('input',renderPlan); });
+  renderPlan();
+
+  /* ---------- 檢查表計分 ---------- */
+  document.querySelectorAll('[data-group]').forEach(function(card){
+    var boxes=card.querySelectorAll('input[type=checkbox]');
+    var score=card.querySelector('[data-score]');
+    function upd(){
+      var n=0, conf=false;
+      boxes.forEach(function(b){ if(b.checked){ n++; if(b.hasAttribute('data-confirm')) conf=true; } });
+      score.querySelector('b').textContent=n;
+      score.querySelector('.confirm').textContent=conf?'已確認':'未';
+    }
+    boxes.forEach(function(b){ b.addEventListener('change',upd); });
+    upd();
+  });
+})();
+
+/* ---------- 希臘字母小圖 ---------- */
+(function(){
+  function Phi(x){ var t=1/(1+0.2316419*Math.abs(x)); var d=0.3989423*Math.exp(-x*x/2); var p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274)))); return x>0?1-p:p; }
+  function mini(id,o){
+    var el=document.getElementById(id); if(!el) return;
+    var W=300,H=230,ml=44,mr=14,mt=22,mb=44;
+    var xs=function(x){return ml+(x-o.x0)/(o.x1-o.x0)*(W-ml-mr);};
+    var ys=function(y){return mt+(o.y1-y)/(o.y1-o.y0)*(H-mt-mb);};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+o.aria+'">';
+    o.yt.forEach(function(t){ s+='<line class="axis" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+ys(t[0])+'" y2="'+ys(t[0])+'"/><text class="tick" x="'+(ml-6)+'" y="'+(ys(t[0])+4)+'" text-anchor="end">'+t[1]+'</text>'; });
+    o.xt.forEach(function(t){ s+='<text class="tick" x="'+xs(t[0])+'" y="'+(H-mb+16)+'" text-anchor="middle">'+t[1]+'</text>'; });
+    s+='<text class="cap" x="'+(ml+(W-ml-mr)/2)+'" y="'+(H-6)+'" text-anchor="middle">'+o.xl+'</text>';
+    s+='<text class="cap" x="4" y="'+(mt-8)+'">'+o.yl+'</text>';
+    o.series.forEach(function(se){ s+='<polyline class="'+se.cls+'" points="'+se.pts.map(function(p){return xs(p[0]).toFixed(1)+','+ys(p[1]).toFixed(1);}).join(' ')+'"/>'; });
+    (o.texts||[]).forEach(function(t){ s+='<text class="lbl2" x="'+(xs(t.x)+(t.dx||0))+'" y="'+(ys(t.y)+(t.dy||0))+'" text-anchor="'+(t.a||'middle')+'">'+t.t+'</text>'; });
+    (o.marks||[]).forEach(function(m){ s+='<circle class="dot" cx="'+xs(m.x)+'" cy="'+ys(m.y)+'" r="4.5"/><text class="lbl2" x="'+(xs(m.x)+(m.dx||0))+'" y="'+(ys(m.y)+(m.dy||-10))+'" text-anchor="'+(m.a||'middle')+'">'+m.t+'</text>'; });
+    el.innerHTML=s+'</svg>';
+  }
+  var S0=46000, sig=0.18, K=46000, sd=sig*Math.sqrt(14/365)*S0;
+  var dp=[]; for(var x=44400;x<=47600;x+=100){ dp.push([x,Phi((x-K)/sd)]); }
+  mini('g-delta',{aria:'價平 Call 的 Delta 隨指數變化的曲線',x0:44400,x1:47600,y0:0,y1:1,
+    yt:[[0,'0'],[0.5,'0.5'],[1,'1']],xt:[[45000,'45,000'],[46000,'46,000'],[47000,'47,000']],
+    xl:'指數(履約價 46,000)',yl:'Delta',series:[{cls:'l1',pts:dp}],
+    marks:[{x:45000,y:Phi(-1000/sd),t:'價外 0.27',dy:22},{x:46000,y:0.5,t:'價平 0.50',dx:10,dy:20,a:'start'},{x:47000,y:Phi(1000/sd),t:'價內 0.73',dx:-8,dy:-10,a:'end'}]});
+  var P=function(d,s){ return 0.3989423*S0*s*Math.sqrt(d/365); };
+  var tp=[]; for(var d=30;d>=0.25;d-=0.25){ tp.push([d,P(d,sig)]); }
+  mini('g-theta',{aria:'價平選擇權的權利金隨剩餘天數下降的曲線',x0:30,x1:0,y0:0,y1:1000,
+    yt:[[0,'0'],[500,'500'],[1000,'1000']],xt:[[30,'30'],[20,'20'],[10,'10'],[0,'0']],
+    xl:'剩餘天數(往右越接近到期)',yl:'權利金(點)',series:[{cls:'l2',pts:tp}],
+    marks:[{x:30,y:P(30,sig),t:'約 950',dx:10,dy:-10,a:'start'},{x:14,y:P(14,sig),t:'約 650',dx:10,dy:-10,a:'start'},{x:7,y:P(7,sig),t:'約 460',dx:8,dy:-12,a:'start'},{x:2,y:P(2,sig),t:'約 245',dx:2,dy:24,a:'end'}]});
+  var v14=[],v45=[]; for(var iv=10;iv<=30;iv+=1){ v14.push([iv,P(14,iv/100)]); v45.push([iv,P(45,iv/100)]); }
+  mini('g-vega',{aria:'價平選擇權的權利金隨隱含波動率上升的直線',x0:10,x1:30,y0:0,y1:2000,
+    yt:[[0,'0'],[1000,'1000'],[2000,'2000']],xt:[[10,'10%'],[15,'15%'],[20,'20%'],[25,'25%'],[30,'30%']],
+    xl:'隱含波動率 IV',yl:'權利金(點)',series:[{cls:'l1',pts:v14},{cls:'l3',pts:v45}],
+    texts:[{x:30,y:P(14,0.30),t:'剩 14 天',a:'end',dy:-10},{x:30,y:P(45,0.30),t:'剩 45 天',a:'end',dy:-10}],
+    marks:[{x:18,y:P(14,0.18),t:'約 650',dx:-6,dy:22,a:'start'}]});
+})();
+
+/* ---------- 分頁 ---------- */
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var ids=tabs.map(function(a){return a.getAttribute('href').slice(1);});
+  var secs=ids.map(function(id){return document.getElementById(id);});
+  var nav=document.querySelector('nav.toc');
+  function show(id,scroll){
+    var i=ids.indexOf(id); if(i<0) i=0;
+    secs.forEach(function(s,k){ s.hidden = (k!==i); });
+    tabs.forEach(function(a,k){ if(k===i){ a.setAttribute('aria-current','page'); a.scrollIntoView({block:'nearest',inline:'center'}); } else { a.removeAttribute('aria-current'); } });
+    try{ history.replaceState(null,'','#'+ids[i]); }catch(e){}
+    if(scroll){ nav.scrollIntoView({block:'start'}); }
+  }
+  tabs.forEach(function(a){
+    a.addEventListener('click',function(ev){ ev.preventDefault(); show(a.getAttribute('href').slice(1),true); });
+  });
+  secs.forEach(function(s,k){
+    var d=document.createElement('div'); d.className='pager';
+    var prev=document.createElement('button'); prev.type='button';
+    var next=document.createElement('button'); next.type='button';
+    if(k>0){ prev.textContent='← '+tabs[k-1].textContent; prev.addEventListener('click',function(){ show(ids[k-1],true); }); } else { prev.hidden=true; }
+    if(k<secs.length-1){ next.textContent=tabs[k+1].textContent+' →'; next.addEventListener('click',function(){ show(ids[k+1],true); }); } else { next.hidden=true; }
+    d.appendChild(prev); d.appendChild(next); s.appendChild(d);
+  });
+  window.addEventListener('hashchange',function(){ show(location.hash.slice(1),false); });
+  show(location.hash.slice(1),false);
+})();
+</script>
+</body>
+</html>

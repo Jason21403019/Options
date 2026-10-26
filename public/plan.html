@@ -23,8 +23,9 @@
   <nav class="toc" aria-label="章節">
     <a href="#size">1 資金與口數</a>
     <a href="#pledge">2 0050 質押比較</a>
-    <a href="#combo">3 搭配選擇權</a>
-    <a href="#start">4 開始前清單</a>
+    <a href="#grow">3 口數與成長</a>
+    <a href="#combo">4 搭配選擇權</a>
+    <a href="#start">5 開始前清單</a>
   </nav>
   <p class="legend"><span class="up"><b>紅 = 賺 / 漲</b></span> · <span class="down"><b>綠 = 賠 / 跌</b></span> · <span class="fillkey">黃色欄位</span> = 要自己填,其餘自動算</p>
 </header>
@@ -140,7 +141,48 @@
   </div>
 </section>
 
-<!-- ============ 3 搭配選擇權 ============ -->
+<!-- ============ 3 口數與成長 ============ -->
+<section id="grow">
+  <h2>口數與資金成長</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>報酬 ≈ 大盤漲幅 × 槓桿。口數越多,漲時越快,跌時也越痛。</li>
+      <li>大盤不漲時,不管幾口,報酬都只剩股息,和定存差不多。</li>
+      <li>先大跌的情境最危險:口數固定時,<b>淨值縮水,槓桿反而越來越高</b>。</li>
+    </ul>
+  </div>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>填寫(股息、利率、成本沿用上一頁)</legend>
+      <div class="fields">
+        <label for="g-cap">本金(元) <input class="fill" id="g-cap" type="number" step="10000" inputmode="numeric" value="1000000"></label>
+        <label for="g-r">大盤每年漲幅 % <input class="fill" id="g-r" type="number" step="1" inputmode="decimal" value="8"></label>
+        <label for="g-y">年數 <input class="fill" id="g-y" type="number" step="1" min="1" max="30" inputmode="numeric" value="10"></label>
+        <label for="g-cr">第 1 年先跌 %(0=不跌) <input class="fill" id="g-cr" type="number" step="5" min="0" inputmode="decimal" value="0"></label>
+        <label for="g-F">指數 <input class="fill" id="g-F" type="number" step="50" inputmode="numeric" value="46000"></label>
+      </div>
+      <p class="small muted" style="margin-top:10px">口數固定、不加碼、不停損。每年固定漲幅是簡化,實際走勢會上下震盪。</p>
+    </fieldset>
+    <div class="out" aria-live="polite">
+      <div class="total"><span class="muted">5 口,最後資金</span><span class="big" id="g-o5">—</span><span class="small muted" id="g-o5b">—</span></div>
+      <div class="total"><span class="muted">2 口,最後資金</span><span class="big" id="g-o2">—</span><span class="small muted" id="g-o2b">—</span></div>
+    </div>
+  </div>
+  <div class="chartwrap"><div id="g-chart"></div></div>
+  <div class="legend-row" id="g-leg"></div>
+  <div class="tablewrap"><table style="min-width:700px">
+    <thead><tr><th>方式</th><th class="r">期初槓桿</th><th class="r">最後資金(萬)</th><th class="r">年化</th><th class="r">最低年底淨值(萬)</th><th class="r">年底最高槓桿</th></tr></thead>
+    <tbody id="g-tbl"></tbody>
+  </table></div>
+  <h3>日常波動感受(用上面的本金與指數)</h3>
+  <div class="tablewrap"><table style="min-width:560px">
+    <thead><tr><th>口數</th><th class="r">單日 −3%</th><th class="r">回檔 −10%</th><th class="r">回檔 −20%</th><th class="r">占本金(−20%)</th></tr></thead>
+    <tbody id="g-str"></tbody>
+  </table></div>
+  <div class="info"><b>5 口的特別之處:</b>5 口微台 = 1 口台指選擇權的曝險,賣 1 口 Call 剛好「有掩護」。下一頁把口數改成 5、Call 口數 1,就能看 Covered Call 與領口的損益。但 5 口槓桿約 2.3 倍,先 2 口、再 3 口,習慣後再說。</div>
+</section>
+
+<!-- ============ 4 搭配選擇權 ============ -->
 <section id="combo">
   <h2>微台搭配選擇權</h2>
   <div class="key"><b class="k">重點</b>
@@ -227,7 +269,7 @@
   <div class="note"><b>注意:</b>賣出 Call 在口數過大時,風險可能超過本金。賣出選擇權的保證金和期貨不同,請先在宏遠確認保證金,以及你的帳戶是否可賣出。這是教學資訊,不構成投資建議。</div>
 </section>
 
-<!-- ============ 4 開始前清單 ============ -->
+<!-- ============ 5 開始前清單 ============ -->
 <section id="start">
   <h2>開始前清單</h2>
   <div class="grid g2">
@@ -303,7 +345,7 @@
     nice(o.x0,o.x1,6).forEach(function(v){ s+='<line class="axis" x1="'+xs(v)+'" x2="'+xs(v)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke-dasharray="2 4"/><text class="tick" x="'+xs(v)+'" y="'+(H-mb+16)+'" text-anchor="middle">'+(o.xf?o.xf(v):fmt(v))+'</text>'; });
     s+='<text class="cap" x="'+(ml+(W-ml-mr)/2)+'" y="'+(H-6)+'" text-anchor="middle">'+o.xl+'</text><text class="cap" x="'+(ml-8)+'" y="'+(mt-8)+'" text-anchor="end">'+o.yl+'</text>';
     (o.vl||[]).forEach(function(v){ s+='<line class="dash" x1="'+xs(v.x)+'" x2="'+xs(v.x)+'" y1="'+mt+'" y2="'+(H-mb)+'"/><text class="cap" x="'+(xs(v.x)+4)+'" y="'+(mt+12)+'">'+v.t+'</text>'; });
-    o.series.forEach(function(se){ s+='<polyline class="'+se.cls+'" points="'+se.pts.map(function(p){return xs(p[0]).toFixed(1)+','+ys(Math.max(o.y0,Math.min(o.y1,p[1]))).toFixed(1);}).join(' ')+'"/>'; });
+    o.series.forEach(function(se){ s+='<polyline class="'+(se.cls||'')+'"'+(se.color?' style="fill:none;stroke-width:'+(se.w||2.5)+';stroke:'+se.color+(se.dash?';stroke-dasharray:'+se.dash:'')+'"':'')+' points="'+se.pts.map(function(p){return xs(p[0]).toFixed(1)+','+ys(Math.max(o.y0,Math.min(o.y1,p[1]))).toFixed(1);}).join(' ')+'"/>'; });
     el.innerHTML=s+'</svg>';
   }
 
@@ -406,7 +448,45 @@
     g('c-tbl').innerHTML=rows;
   }
 
-  function all(){ size(); pledge(); combo(); }
+
+  /* ===== 3 口數與成長 ===== */
+  function grow(){
+    var cap=nv('g-cap',1e6),r=nv('g-r',8)/100,Y=Math.max(1,Math.min(30,Math.round(nv('g-y',10)))),cr=nv('g-cr',0)/100,F0=nv('g-F',46000);
+    var d=nv('p-div',2.5)/100,cash=nv('p-cash',1.5)/100,cost=nv('p-cost',0.3)/100,rt=nv('p-rate',3)/100;
+    var rr=function(y){return (y===0&&cr>0)?-cr:r;};
+    function micro(n){var E=cap,F=F0,o=[E],mx=n*10*F0/cap,mn=E,dead=false;
+      for(var y=0;y<Y;y++){ if(!dead){var L=n*10*F/E,ry=rr(y);E*=1+L*(ry+d)+(1-L)*cash-L*cost;F*=1+ry; if(E<=0){E=0;dead=true;} else {mx=Math.max(mx,n*10*F/E);mn=Math.min(mn,E);} } o.push(E); }
+      return {o:o,mx:mx,mn:dead?0:mn,lev0:n*10*F0/cap};}
+    function pled(pr){var A=cap*(1+pr),loan=cap*pr,E=cap,o=[E],mx=1+pr,mn=E,dead=false;
+      for(var y=0;y<Y;y++){ if(!dead){A=A*(1+rr(y)+d)-loan*rt;E=A-loan; if(E<=0){E=0;dead=true;} else {mx=Math.max(mx,A/E);mn=Math.min(mn,E);} } o.push(E); }
+      return {o:o,mx:mx,mn:dead?0:mn,lev0:1+pr};}
+    var S=[
+      {n:'2 口微台',c:'#24508C',d:null,x:micro(2)},
+      {n:'3 口微台',c:'#2E8B6A',d:null,x:micro(3)},
+      {n:'4 口微台',c:'#B8791A',d:null,x:micro(4)},
+      {n:'5 口微台',c:'#C42E25',d:null,x:micro(5)},
+      {n:'0050 不質押',c:'#7A8699',d:'6 5',x:pled(0)},
+      {n:'0050 質押 30%',c:'#7A5BA6',d:'6 5',x:pled(0.3)},
+      {n:'0050 質押 60%',c:'#9C4A7A',d:'6 5',x:pled(0.6)}];
+    var rows='',ymax=cap;
+    S.forEach(function(s){ var last=s.x.o[Y]; ymax=Math.max(ymax,last);
+      var ann=last>0?(Math.pow(last/cap,1/Y)-1)*100:-100;
+      rows+='<tr><td><b style="color:'+s.c+'">'+(s.d?'┅ ':'━ ')+'</b>'+s.n+'</td><td class="r num">'+s.x.lev0.toFixed(2)+'x</td><td class="r num">'+(last>0?(last/1e4).toFixed(0):'爆倉')+'</td><td class="r num '+cls(ann)+'">'+(last>0?pct(ann):'—')+'</td><td class="r num">'+(s.x.mn/1e4).toFixed(0)+'</td><td class="r num"'+(s.x.mx>=3?' style="color:var(--warn);font-weight:700"':'')+'>'+s.x.mx.toFixed(1)+'x'+(s.x.mx>=4?' ⚠':'')+'</td></tr>'; });
+    g('g-tbl').innerHTML=rows;
+    g('g-leg').innerHTML=S.map(function(s){return '<span><b style="color:'+s.c+'">'+(s.d?'┅':'━')+'</b> '+s.n+'</span>';}).join('');
+    var xs=[];for(var i=0;i<=Y;i++)xs.push(i);
+    chart(g('g-chart'),{x0:0,x1:Y,y0:0,y1:ymax*1.05,xl:'年',yl:'資金(萬)',yf:function(v){return Math.round(v/1e4);},xf:function(v){return v;},
+      series:S.map(function(s){return {color:s.c,dash:s.d,pts:s.x.o.map(function(v,i){return [i,v];})};})});
+    var f=function(x){return x>0?(x/1e4).toFixed(0)+' 萬':'爆倉';};
+    set('g-o5',f(S[3].x.o[Y])); set('g-o5b','年底最高槓桿 '+S[3].x.mx.toFixed(1)+' 倍');
+    set('g-o2',f(S[0].x.o[Y])); set('g-o2b','年底最高槓桿 '+S[0].x.mx.toFixed(1)+' 倍');
+    var st='';
+    for(var n=2;n<=5;n++){ var N0=n*10*F0, a=N0*0.03,b=N0*0.10,c=N0*0.20;
+      st+='<tr><td><b>'+n+' 口</b></td><td class="r num down">−'+fmt(a)+'</td><td class="r num down">−'+fmt(b)+'</td><td class="r num down">−'+fmt(c)+'</td><td class="r num">'+(c/cap*100).toFixed(0)+'%</td></tr>'; }
+    g('g-str').innerHTML=st;
+  }
+
+  function all(){ size(); pledge(); grow(); combo(); }
   [].slice.call(document.querySelectorAll('input.fill')).forEach(function(e){ e.addEventListener('input',all); });
   all();
 

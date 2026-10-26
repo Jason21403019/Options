@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>資金規劃:微台與選擇權搭配</title>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <nav class="sitenav" aria-label="網站">
+    <a href="index.html">選擇權筆記</a>
+    <a href="futures.html">期貨:無限轉倉</a>
+    <a href="plan.html" aria-current="page">資金規劃</a>
+  </nav>
+  <span class="eyebrow">100 萬本金 · 2 口微台 · 資料基準日 2026/10/26</span>
+  <h1>資金規劃:微台與選擇權搭配</h1>
+  <p class="lead">先用 2 口微台起步,算清楚槓桿與風險,再和「0050 質押」比較,最後看選擇權怎麼搭配。黃色欄位可改,其餘自動算。</p>
+  <nav class="toc" aria-label="章節">
+    <a href="#size">1 資金與口數</a>
+    <a href="#pledge">2 0050 質押比較</a>
+    <a href="#combo">3 搭配選擇權</a>
+    <a href="#start">4 開始前清單</a>
+  </nav>
+  <p class="legend"><span class="up"><b>紅 = 賺 / 漲</b></span> · <span class="down"><b>綠 = 賠 / 跌</b></span> · <span class="fillkey">黃色欄位</span> = 要自己填,其餘自動算</p>
+</header>
+
+<!-- ============ 1 資金與口數 ============ -->
+<section id="size">
+  <h2>資金與口數</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>100 萬放 2 口微台,名目金額約 92 萬,<b>槓桿約 0.9 倍</b>,比本金還小。</li>
+      <li>指數每動 1,000 點,損益 ±2 萬(2%)。要被追繳,指數得跌到接近 0,實際上不會發生。</li>
+      <li>你以前「保證金放剛好」才會心態崩,重點不是賺更多,而是<b>留足緩衝</b>。</li>
+    </ul>
+  </div>
+
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>填寫</legend>
+      <div class="fields">
+        <label for="s-cap">帳戶本金(元) <input class="fill" id="s-cap" type="number" step="10000" inputmode="numeric" value="1000000"></label>
+        <label for="s-n">微台口數 <input class="fill" id="s-n" type="number" step="1" min="1" inputmode="numeric" value="2"></label>
+        <label for="s-F">指數 / 建倉價 <input class="fill" id="s-F" type="number" step="50" inputmode="numeric" value="46000"></label>
+        <label for="s-mi">原始保證金/口 <input class="fill" id="s-mi" type="number" step="50" inputmode="numeric" value="35050"></label>
+        <label for="s-mm">維持保證金/口 <input class="fill" id="s-mm" type="number" step="50" inputmode="numeric" value="26900"></label>
+      </div>
+      <p class="small muted" style="margin-top:10px">保證金為期交所 2026/8/12 生效數字,會調整,請以宏遠公告為準。</p>
+    </fieldset>
+    <div class="out" aria-live="polite">
+      <div class="total"><span class="muted">槓桿(名目 ÷ 本金)</span><span class="big" id="s-lev">—</span></div>
+      <div class="row"><span>名目金額</span><span class="num" id="s-not">—</span><span class="muted small">每點 10 元 × 口數 × 指數</span></div>
+      <div class="row"><span>占用保證金</span><span class="num" id="s-use">—</span><span class="muted small" id="s-usep">—</span></div>
+      <div class="row"><span>每 1,000 點</span><span class="num" id="s-k">—</span><span class="muted small" id="s-kp">—</span></div>
+      <div class="row"><span>每 1% 漲跌</span><span class="num" id="s-pc">—</span><span class="muted small">占本金比例見左</span></div>
+      <div class="row"><span>追繳點</span><span class="num" id="s-call">—</span><span class="muted small" id="s-calld">—</span></div>
+    </div>
+  </div>
+
+  <h3>不同口數一覽(用上面的本金、指數、保證金算)</h3>
+  <div class="tablewrap"><table style="min-width:640px">
+    <thead><tr><th>口數</th><th class="r">槓桿</th><th class="r">每 1,000 點</th><th class="r">追繳點</th><th class="r">需跌幅</th><th>感覺</th></tr></thead>
+    <tbody id="s-tbl"></tbody>
+  </table></div>
+  <div class="info"><b>怎麼用:</b>先決定「我能睡得著的單日最大虧損」。例如 2 萬,就是 1 口微台碰到 2,000 點的跌幅。再反推口數。2 口適合起步,等經歷過一次 5% 以上的回檔還沒慌,再考慮加到 3 口。</div>
+</section>
+
+<!-- ============ 2 0050 質押比較 ============ -->
+<section id="pledge">
+  <h2>2 口微台 vs 0050 質押</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>兩者吃的是<b>同一個大盤</b>。差別只在槓桿:微台 2 口約 0.9 倍,0050 質押 60% 再買進約 1.6 倍。</li>
+      <li>槓桿高,漲時賺更多,跌時也虧更多,質押還可能被通知補繳。</li>
+      <li>要和質押比,微台約需 3 到 4 口,但每 1,000 點的損益也跟著變 6 萬到 8 萬。</li>
+    </ul>
+  </div>
+
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>假設(都可改)</legend>
+      <div class="fields">
+        <label for="p-cap">本金(元) <input class="fill" id="p-cap" type="number" step="10000" inputmode="numeric" value="1000000"></label>
+        <label for="p-lev">微台槓桿(倍) <input class="fill" id="p-lev" type="number" step="0.1" inputmode="decimal" value="0.92"></label>
+        <label for="p-div">0050 年配息率 % <input class="fill" id="p-div" type="number" step="0.1" inputmode="decimal" value="2.5"></label>
+        <label for="p-pr">質押成數 % <input class="fill" id="p-pr" type="number" step="5" inputmode="numeric" value="60"></label>
+        <label for="p-rate">質押年利率 % <input class="fill" id="p-rate" type="number" step="0.1" inputmode="decimal" value="3"></label>
+        <label for="p-call">追繳維持率 % <input class="fill" id="p-call" type="number" step="5" inputmode="numeric" value="130"></label>
+        <label for="p-cash">現金年利率 % <input class="fill" id="p-cash" type="number" step="0.1" inputmode="decimal" value="1.5"></label>
+        <label for="p-cost">微台年成本 % <input class="fill" id="p-cost" type="number" step="0.1" inputmode="decimal" value="0.3"></label>
+      </div>
+      <p class="small muted" style="margin-top:10px">配息率、質押利率、成數依各家與時期而異。0050 查到的近一年殖利率約 1.5%,近五年平均約 3.6%,所以預設取中間的 2.5%。</p>
+    </fieldset>
+    <div class="out" aria-live="polite">
+      <div class="total"><span class="muted">質押追繳點(只質押原本部位)</span><span class="big" id="p-cp">—</span></div>
+      <div class="row"><span>借款</span><span class="num" id="p-loan">—</span><span class="muted small">本金 × 成數</span></div>
+      <div class="row"><span>0050 股數</span><span class="num" id="p-sh">—</span><span class="muted small" id="p-sh2">—</span></div>
+      <div class="row"><span>等效微台口數</span><span class="num" id="p-nmt">—</span><span class="muted small">質押後 1.6 倍約等於幾口</span></div>
+    </div>
+  </div>
+
+  <h3>一年報酬(含配息與利息)</h3>
+  <div class="chartwrap"><div id="p-chart"></div></div>
+  <div class="legend-row">
+    <span><b style="color:var(--c1)">━</b> 0050 不質押</span>
+    <span><b style="color:var(--c2)">━</b> 0050 質押再買進</span>
+    <span><b style="color:var(--c3)">━</b> 微台</span>
+  </div>
+  <div class="tablewrap"><table style="min-width:620px">
+    <thead><tr><th>大盤一年漲跌</th><th class="r">0050 不質押</th><th class="r">0050 質押</th><th class="r">微台</th></tr></thead>
+    <tbody id="p-tbl"></tbody>
+  </table></div>
+  <ul class="plain small muted">
+    <li>這是假設情境,不是預測。標示 ⚠ 的格子,代表跌幅已超過質押追繳點,實際上會被通知補繳或處分,報酬不會停在表上的數字。</li>
+    <li>微台的股息藏在期貨價差裡,所以用「總報酬」估。轉倉實際價差、手續費與稅,以實際成交為準。</li>
+    <li>質押成數、利率、ETF 是否可質押,各機構不同,且可能收緊(富邦今年 5/13 停收新的不限用途貸款)。請向券商或銀行確認。</li>
+  </ul>
+
+  <h3>兩者各自的麻煩</h3>
+  <div class="grid g2">
+    <div class="card"><h3>微台 <small>期貨</small></h3>
+      <ul class="plain small">
+        <li>每月要轉倉,要處理價差與手續費。</li>
+        <li>逐日結算,淨值每天變動,低於維持保證金會被追繳。</li>
+        <li>不能領配息,但配息已反映在價差。</li>
+        <li>可以再搭配選擇權做保護或收租(見下一頁)。</li>
+      </ul></div>
+    <div class="card"><h3>0050 質押 <small>現貨</small></h3>
+      <ul class="plain small">
+        <li>要付利息,利率可能調整。</li>
+        <li>維持率低於追繳線,限期補繳,不然被處分。</li>
+        <li>機構可能收緊新貸款或調降成數。</li>
+        <li>沒有到期日、不用轉倉,操作簡單。</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ============ 3 搭配選擇權 ============ -->
+<section id="combo">
+  <h2>微台搭配選擇權</h2>
+  <div class="key"><b class="k">重點</b>
+    <ul>
+      <li>1 口台指選擇權(TXO)= 每點 50 元 = <b>5 口微台</b>的曝險。2 口微台只有 0.4 個 TXO,所以「1 口選擇權」對 2 口微台是<b>太大</b>。</li>
+      <li>買 Put(保護)用 1 口也行,會變成稍微「過度避險」。賣 Call(收租)用 1 口,指數大漲時會變成淨空單。</li>
+      <li>2 口適合的做法:<b>買價外 Put 或 Put 價差</b>。想收租,等加到 5 口,或改用 Call 價差(見 futures 頁第 4 分頁)。</li>
+    </ul>
+  </div>
+
+  <div class="grid g3">
+    <div class="card"><h3>保護下跌 <small>買 Put</small></h3>
+      <ul class="plain small">
+        <li>付權利金,換「跌破履約價後虧損被擋住」。</li>
+        <li>最大損失:期貨損失到履約價 + 權利金,固定。</li>
+        <li>指數不跌,權利金會隨時間流失(Theta)。</li>
+        <li><b>2 口適用度:高</b>。用價外 3% 到 5% 的 Put 較省錢。</li>
+      </ul></div>
+    <div class="card"><h3>收租降成本 <small>賣 Call</small></h3>
+      <ul class="plain small">
+        <li>期貨多單 + 賣 Call = Covered Call,收權利金。</li>
+        <li>漲過履約價後,上檔被封頂(但期貨賺到的仍在)。</li>
+        <li>下跌時,權利金只能緩衝一點,不是保護。</li>
+        <li><b>2 口適用度:低</b>。1 口 Call 曝險 5 倍微台,大於期貨,超過履約價會倒賠。</li>
+      </ul></div>
+    <div class="card"><h3>領口 <small>買 Put + 賣 Call</small></h3>
+      <ul class="plain small">
+        <li>賣 Call 的錢,補貼買 Put 的錢,幾乎零成本。</li>
+        <li>損益被限在一個區間,上下都有限。</li>
+        <li>要接受「大漲也賺不到」。</li>
+        <li><b>2 口適用度:中</b>。Call 端有「口數過大」問題,見下方試算。</li>
+      </ul></div>
+  </div>
+
+  <h3>損益試算(到期時)</h3>
+  <div class="calc">
+    <fieldset class="fillset">
+      <legend>填寫</legend>
+      <div class="fields">
+        <label for="c-n">微台口數 <input class="fill" id="c-n" type="number" step="1" min="1" inputmode="numeric" value="2"></label>
+        <label for="c-F">建倉價 <input class="fill" id="c-F" type="number" step="50" inputmode="numeric" value="46000"></label>
+        <label for="c-iv">隱含波動率 % <input class="fill" id="c-iv" type="number" step="0.5" inputmode="decimal" value="18"></label>
+        <label for="c-d">到期天數 <input class="fill" id="c-d" type="number" step="1" min="1" inputmode="numeric" value="30"></label>
+        <label for="c-kp">買 Put 履約價 <input class="fill" id="c-kp" type="number" step="100" inputmode="numeric" value="44000"></label>
+        <label for="c-tp">買 Put 口數 <input class="fill" id="c-tp" type="number" step="1" min="0" inputmode="numeric" value="1"></label>
+        <label for="c-kp2">Put 價差:賣更低 Put(0=不用) <input class="fill" id="c-kp2" type="number" step="100" inputmode="numeric" value="0"></label>
+        <label for="c-kc">賣 Call 履約價 <input class="fill" id="c-kc" type="number" step="100" inputmode="numeric" value="48000"></label>
+        <label for="c-tc">賣 Call 口數 <input class="fill" id="c-tc" type="number" step="1" min="0" inputmode="numeric" value="1"></label>
+      </div>
+      <p class="small muted" style="margin-top:10px">權利金用簡化的 Black-Scholes 估算(利率 1.5%,無股息),只是示意,下單前請看實際報價,可在下面三個「實際權利金」欄填入報價覆蓋(留空=用估算)。</p>
+      <div class="fields" style="margin-top:8px">
+        <label for="c-pp">Put 實際權利金(點) <input class="fill" id="c-pp" type="number" step="1" inputmode="decimal" placeholder="自動"></label>
+        <label for="c-pp2">更低 Put 實際(點) <input class="fill" id="c-pp2" type="number" step="1" inputmode="decimal" placeholder="自動"></label>
+        <label for="c-pc">Call 實際權利金(點) <input class="fill" id="c-pc" type="number" step="1" inputmode="decimal" placeholder="自動"></label>
+      </div>
+    </fieldset>
+    <div class="out" aria-live="polite">
+      <div class="row"><span>Put 權利金</span><span class="num" id="c-ppo">—</span><span class="muted small" id="c-ppc">—</span></div>
+      <div class="row"><span>Call 權利金</span><span class="num" id="c-pco">—</span><span class="muted small" id="c-pcc">—</span></div>
+      <div class="row"><span>Delta 避險比</span><span class="num" id="c-hr">—</span><span class="muted small">Put 的 Delta × 5 × 口數 ÷ 微台口數</span></div>
+      <div class="total"><span class="muted">賣 Call 後,漲過履約價的淨部位</span><span class="big" id="c-net">—</span><span class="small muted" id="c-net2">—</span></div>
+    </div>
+  </div>
+
+  <div class="chartwrap"><div id="c-chart"></div></div>
+  <div class="legend-row">
+    <span><b style="color:var(--muted)">┅</b> 只有期貨</span>
+    <span><b style="color:var(--c3)">━</b> 期貨 + Put</span>
+    <span><b style="color:var(--c2)">━</b> 期貨 + 賣 Call</span>
+    <span><b style="color:var(--c1)">━</b> 領口(Put + Call)</span>
+  </div>
+  <div class="tablewrap"><table style="min-width:640px">
+    <thead><tr><th>到期指數</th><th class="r">只有期貨</th><th class="r">+ Put</th><th class="r">+ 賣 Call</th><th class="r">領口</th></tr></thead>
+    <tbody id="c-tbl"></tbody>
+  </table></div>
+
+  <h3>2 口微台的實務建議</h3>
+  <ol class="steps">
+    <li><b>起步先不搭配</b>:2 口、0.9 倍槓桿,本身就留足緩衝,先體驗逐日結算與轉倉。</li>
+    <li><b>想保護</b>:在指數靠近半年線、或漲多時,買 1 口價外 3% 到 5%、到期約 30 天的 Put,或用 Put 價差降成本。</li>
+    <li><b>想收租</b>:口數至少 5 口微台再賣 1 口 Call。不到 5 口,用 Call 價差,或不要做。</li>
+    <li><b>先看「最壞情況」</b>:每筆都先看圖上最左邊與最右邊的損益,能接受再下單。</li>
+  </ol>
+  <div class="note"><b>注意:</b>賣出 Call 在口數過大時,風險可能超過本金。賣出選擇權的保證金和期貨不同,請先在宏遠確認保證金,以及你的帳戶是否可賣出。這是教學資訊,不構成投資建議。</div>
+</section>
+
+<!-- ============ 4 開始前清單 ============ -->
+<section id="start">
+  <h2>開始前清單</h2>
+  <div class="grid g2">
+    <div class="card"><h3>第一週要做的事</h3>
+      <ol class="steps">
+        <li>確認帳戶有「期貨」與「選擇權」權限,以及可用保證金。</li>
+        <li>查宏遠的微台保證金(是否高於期交所公告),寫在上面「資金與口數」。</li>
+        <li>確認轉倉時間與方法(多數人在到期前一週到結算日前處理)。</li>
+        <li>先決定「單日最大能接受虧損」,再決定 2 口是否夠。</li>
+        <li>下單後 5 天,每天記錄淨值與心情。</li>
+      </ol></div>
+    <div class="card"><h3>進場想法(你提到的)</h3>
+      <ul class="plain small">
+        <li><b>低點附近進場</b>:以半年線(約 120 日均線)附近作參考,是大約的區域,不是精準點位。</li>
+        <li><b>下跌時轉倉</b>:轉倉價差(次月 − 近月)要看,逆價差代表轉倉有利,正價差越大成本越高。</li>
+        <li><b>不要一次放滿</b>:先 2 口,跌到下一個區間再加,每次加前先算槓桿。</li>
+      </ul>
+      <div class="info small">價位與均線每天在變,以你自己看到的盤面為準。</div></div>
+  </div>
+
+  <h3>下單前自我檢查</h3>
+  <div class="card">
+    <label class="check"><input type="checkbox"> 我知道指數每動 1,000 點,2 口損益是 ±2 萬</label>
+    <label class="check"><input type="checkbox"> 本金不是生活費、也不是短期要用的錢</label>
+    <label class="check"><input type="checkbox"> 我知道賣出 Call 的最大損失可能超過本金</label>
+    <label class="check"><input type="checkbox"> 我查過宏遠最新的保證金與轉倉規則</label>
+    <label class="check"><input type="checkbox"> 我決定好跌到哪裡要減碼,而不是臨時決定</label>
+    <label class="check"><input type="checkbox"> 我看過選擇權搭配的「最壞情況」損益圖</label>
+  </div>
+
+  <h3>資料來源與時間</h3>
+  <div class="tablewrap"><table style="min-width:600px">
+    <thead><tr><th>項目</th><th>數字</th><th>來源 / 日期</th></tr></thead>
+    <tbody>
+      <tr><td>加權指數</td><td class="num">46,041</td><td>財報狗,2026/10/22 收盤(單日 −1.87%)</td></tr>
+      <tr><td>微台保證金</td><td class="num">結算 25,950 / 維持 26,900 / 原始 35,050</td><td>期交所,2026/8/12 生效</td></tr>
+      <tr><td>0050 股價</td><td class="num">109.85 元</td><td>Yahoo 股市,2026/9/18 收盤(較舊)</td></tr>
+      <tr><td>0050 配息</td><td class="num">0.6 元(2026/7)、1.0 元(2026/1)</td><td>Yahoo 股市;近五年平均殖利率約 3.64%</td></tr>
+      <tr><td>質押追繳線</td><td class="num">整戶維持率 130%(富邦例)</td><td>Money101,2026/8/16;各家不同</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  <span>本頁為教學整理,不構成投資建議。期貨與賣出選擇權的損失可能超過本金,請只使用賠掉也不影響生活的資金。</span>
+  <span>報酬比較為假設情境,不是預測;保證金、利率、成數會調整,請以期交所、宏遠證券與貸款機構最新公告為準。</span>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var g=function(id){return document.getElementById(id);};
+  var fmt=function(n){return Math.round(n).toLocaleString('en-US');};
+  var sgn=function(n){var r=Math.round(n);return (r>0?'+':(r<0?'−':''))+Math.abs(r).toLocaleString('en-US');};
+  var pct=function(n,d){d=d==null?1:d;return (n>0?'+':(n<0?'−':''))+Math.abs(n).toFixed(d)+'%';};
+  var cls=function(n){return n>0?'up':(n<0?'down':'');};
+  var nv=function(id,d){var v=parseFloat(g(id).value);return isNaN(v)?d:v;};
+  var set=function(id,t,c){var e=g(id);e.textContent=t;if(c!==undefined)e.className=(e.className.replace(/\b(up|down)\b/g,'').trim()+' '+c).trim();};
+
+  function nice(lo,hi,cnt){
+    var raw=(hi-lo)/cnt; if(raw<=0) return [lo];
+    var p=Math.pow(10,Math.floor(Math.log10(raw))), m=raw/p, st=(m<=1?1:(m<=2?2:(m<=5?5:10)))*p, out=[];
+    for(var v=Math.ceil(lo/st)*st; v<=hi+1e-9; v+=st) out.push(v);
+    return out;
+  }
+  function chart(el,o){
+    var W=o.W||580,H=o.H||270,ml=o.ml||64,mr=16,mt=24,mb=44;
+    var xs=function(x){return ml+(x-o.x0)/(o.x1-o.x0)*(W-ml-mr);};
+    var ys=function(y){return mt+(o.y1-y)/(o.y1-o.y0)*(H-mt-mb);};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" style="min-width:520px;display:block;width:100%;height:auto" aria-hidden="true">';
+    nice(o.y0,o.y1,5).forEach(function(v){ s+='<line class="'+(v===0?'axis0':'axis')+'" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+ys(v)+'" y2="'+ys(v)+'"/><text class="tick" x="'+(ml-8)+'" y="'+(ys(v)+4)+'" text-anchor="end">'+(o.yf?o.yf(v):fmt(v))+'</text>'; });
+    nice(o.x0,o.x1,6).forEach(function(v){ s+='<line class="axis" x1="'+xs(v)+'" x2="'+xs(v)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke-dasharray="2 4"/><text class="tick" x="'+xs(v)+'" y="'+(H-mb+16)+'" text-anchor="middle">'+(o.xf?o.xf(v):fmt(v))+'</text>'; });
+    s+='<text class="cap" x="'+(ml+(W-ml-mr)/2)+'" y="'+(H-6)+'" text-anchor="middle">'+o.xl+'</text><text class="cap" x="'+(ml-8)+'" y="'+(mt-8)+'" text-anchor="end">'+o.yl+'</text>';
+    (o.vl||[]).forEach(function(v){ s+='<line class="dash" x1="'+xs(v.x)+'" x2="'+xs(v.x)+'" y1="'+mt+'" y2="'+(H-mb)+'"/><text class="cap" x="'+(xs(v.x)+4)+'" y="'+(mt+12)+'">'+v.t+'</text>'; });
+    o.series.forEach(function(se){ s+='<polyline class="'+se.cls+'" points="'+se.pts.map(function(p){return xs(p[0]).toFixed(1)+','+ys(Math.max(o.y0,Math.min(o.y1,p[1]))).toFixed(1);}).join(' ')+'"/>'; });
+    el.innerHTML=s+'</svg>';
+  }
+
+  /* ===== 1 資金與口數 ===== */
+  function lev(cap,n,F){return n*10*F/cap;}
+  function callPt(cap,n,F,mm){ var loss=cap-n*mm; return F-loss/(10*n); }
+  function size(){
+    var cap=nv('s-cap',1e6),n=Math.max(1,nv('s-n',2)),F=nv('s-F',46000),mi=nv('s-mi',35050),mm=nv('s-mm',26900);
+    var not=n*10*F, L=not/cap, use=n*mi;
+    set('s-lev',L.toFixed(2)+' 倍');
+    set('s-not',fmt(not));
+    set('s-use',fmt(use)); set('s-usep','占本金 '+(use/cap*100).toFixed(1)+'%');
+    var k=n*10*1000; set('s-k','±'+fmt(k)); set('s-kp','占本金 '+(k/cap*100).toFixed(1)+'%');
+    set('s-pc','±'+fmt(F*0.01*n*10));
+    var cp=callPt(cap,n,F,mm);
+    if(cp<=0){ set('s-call','不會追繳'); set('s-calld','指數跌到 0 也不會'); }
+    else { set('s-call',fmt(cp)); set('s-calld','需跌 '+((F-cp)/F*100).toFixed(0)+'%(約 '+fmt(F-cp)+' 點)'); }
+    var rows='';
+    for(var i=1;i<=8;i++){
+      var Li=lev(cap,i,F), c=callPt(cap,i,F,mm), tag=Li<0.8?'很寬鬆':(Li<1.2?'寬鬆':(Li<2?'中等':(Li<3?'偏高':'高')));
+      rows+='<tr'+(i===n?' style="background:var(--accent-soft)"':'')+'><td><b>'+i+' 口</b></td><td class="r num">'+Li.toFixed(2)+'x</td><td class="r num">±'+fmt(i*10000)+'</td><td class="r num">'+(c<=0?'不會':fmt(c))+'</td><td class="r num">'+(c<=0?'—':((F-c)/F*100).toFixed(0)+'%')+'</td><td>'+tag+'</td></tr>';
+    }
+    g('s-tbl').innerHTML=rows;
+    return {cap:cap,n:n,F:F};
+  }
+
+  /* ===== 2 0050 質押 ===== */
+  function pledge(){
+    var cap=nv('p-cap',1e6),L=nv('p-lev',0.92),d=nv('p-div',2.5)/100,pr=nv('p-pr',60)/100,rt=nv('p-rate',3)/100,call=nv('p-call',130)/100,cash=nv('p-cash',1.5)/100,cost=nv('p-cost',0.3)/100;
+    var etf=function(p){return p+d;};
+    var pl=function(p){return (1+pr)*(p+d)-pr*rt;};
+    var mt=function(p){return L*(p+d)+(1-L)*cash-L*cost;};
+    var cp=call/pr; /* 抵押品值/借款 = call → 價值需 ≥ call*pr */
+    var callDrop=(call*pr-1); /* 價格變動(相對本金) */
+    set('p-cp',pct(callDrop*100,0)+' 附近');
+    set('p-loan',fmt(cap*pr));
+    var px=109.85; set('p-sh',fmt(cap/px)+' 股'); set('p-sh2','以 109.85 元估(9/18 收盤);質押再買進共約 '+fmt(cap*(1+pr)/px)+' 股');
+    set('p-nmt',(((1+pr)*cap)/(10*46000)).toFixed(1)+' 口');
+    var rows='',pts=[[],[],[]];
+    for(var p=-30;p<=30;p+=10){
+      var a=etf(p/100)*100,b=pl(p/100)*100,c=mt(p/100)*100;
+      var warn=(p/100)<=callDrop;
+      pts[0].push([p,a]);pts[1].push([p,b]);pts[2].push([p,c]);
+      rows+='<tr><td><b class="num '+cls(p)+'">'+pct(p,0)+'</b></td><td class="r num '+cls(a)+'">'+pct(a)+'</td><td class="r num '+cls(b)+'">'+pct(b)+(warn?' ⚠':'')+'</td><td class="r num '+cls(c)+'">'+pct(c)+'</td></tr>';
+    }
+    g('p-tbl').innerHTML=rows;
+    for(var q=-30;q<=30;q+=1){}
+    var P=[[],[],[]];
+    for(var x=-30;x<=30;x+=2){ P[0].push([x,etf(x/100)*100]);P[1].push([x,pl(x/100)*100]);P[2].push([x,mt(x/100)*100]); }
+    chart(g('p-chart'),{x0:-30,x1:30,y0:-60,y1:60,xl:'大盤一年漲跌 %',yl:'報酬 %',xf:function(v){return v+'%';},yf:function(v){return v+'%';},
+      series:[{cls:'l1',pts:P[0]},{cls:'l2',pts:P[1]},{cls:'l3',pts:P[2]}],vl:[{x:callDrop*100,t:'質押追繳點'}]});
+  }
+
+  /* ===== 3 選擇權搭配 ===== */
+  function N(x){ var t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2); var p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274)))); return x>0?1-p:p; }
+  function bs(S,K,iv,days,type){
+    var T=days/365,r=0.015,s=iv*Math.sqrt(T),d1=(Math.log(S/K)+(r+iv*iv/2)*T)/s,d2=d1-s,df=Math.exp(-r*T);
+    if(type==='c') return {p:S*N(d1)-K*df*N(d2),d:N(d1)};
+    return {p:K*df*N(-d2)-S*N(-d1),d:N(d1)-1};
+  }
+  function combo(){
+    var n=Math.max(1,nv('c-n',2)),F=nv('c-F',46000),iv=nv('c-iv',18)/100,days=Math.max(1,nv('c-d',30));
+    var kp=nv('c-kp',44000),tp=Math.max(0,nv('c-tp',1)),kp2=nv('c-kp2',0),kc=nv('c-kc',48000),tc=Math.max(0,nv('c-tc',1));
+    var ov=function(id,def){var e=g(id).value;return e===''||isNaN(parseFloat(e))?def:parseFloat(e);};
+    var P1=bs(F,kp,iv,days,'p'),P2=kp2>0?bs(F,kp2,iv,days,'p'):{p:0,d:0},C=bs(F,kc,iv,days,'c');
+    var pp=ov('c-pp',P1.p),pp2=kp2>0?ov('c-pp2',P2.p):0,pc=ov('c-pc',C.p);
+    var putNet=pp-(kp2>0?pp2:0);
+    set('c-ppo',fmt(putNet)+' 點');
+    set('c-ppc','每口 '+fmt(putNet*50)+' 元;'+tp+' 口共 '+fmt(putNet*50*tp)+' 元(付出)');
+    set('c-pco',fmt(pc)+' 點');
+    set('c-pcc','每口 '+fmt(pc*50)+' 元;'+tc+' 口共 '+fmt(pc*50*tc)+' 元(收入)');
+    var dl=Math.abs(P1.d)-(kp2>0?Math.abs(P2.d):0);
+    var hr=dl*5*tp/n;
+    set('c-hr',(hr*100).toFixed(0)+'%');
+    var net=n*10-tc*50;
+    set('c-net',(net>=0?'+':'−')+Math.abs(net)+' 元/點',cls(net));
+    set('c-net2',net<0?'指數漲過 '+fmt(kc)+' 後,等於淨空 '+(Math.abs(net)/10).toFixed(1)+' 口微台。口數過大。':'賣 Call 口數沒有超過期貨,屬於「有掩護」。');
+    var pay=function(X,usePut,useCall){
+      var v=n*10*(X-F);
+      if(usePut){ v+=tp*50*(Math.max(kp-X,0)-(kp2>0?Math.max(kp2-X,0):0)-putNet); }
+      if(useCall){ v+=-tc*50*(Math.max(X-kc,0)-pc); }
+      return v;
+    };
+    var x0=Math.round((F*0.86)/500)*500,x1=Math.round((F*1.14)/500)*500;
+    var S=[[],[],[],[]],ymin=1e9,ymax=-1e9;
+    for(var X=x0;X<=x1;X+=250){
+      var a=pay(X,0,0),b=pay(X,1,0),c=pay(X,0,1),d=pay(X,1,1);
+      S[0].push([X,a]);S[1].push([X,b]);S[2].push([X,c]);S[3].push([X,d]);
+      [a,b,c,d].forEach(function(v){ymin=Math.min(ymin,v);ymax=Math.max(ymax,v);});
+    }
+    var pad=(ymax-ymin)*0.08;
+    chart(g('c-chart'),{x0:x0,x1:x1,y0:ymin-pad,y1:ymax+pad,xl:'到期指數',yl:'損益(元)',yf:function(v){return (v/10000).toFixed(v%10000?1:0)+'萬';},
+      series:[{cls:'ld',pts:S[0]},{cls:'l3',pts:S[1]},{cls:'l2',pts:S[2]},{cls:'l1',pts:S[3]}],vl:[{x:F,t:'建倉價'}]});
+    var pts=[F*0.88,F*0.92,F*0.96,F,F*1.04,F*1.08,F*1.12].map(function(v){return Math.round(v/100)*100;});
+    var rows='';
+    pts.forEach(function(X){
+      var a=pay(X,0,0),b=pay(X,1,0),c=pay(X,0,1),d=pay(X,1,1);
+      rows+='<tr><td class="num"><b>'+fmt(X)+'</b> <span class="muted small">('+pct((X/F-1)*100,0)+')</span></td><td class="r num '+cls(a)+'">'+sgn(a)+'</td><td class="r num '+cls(b)+'">'+sgn(b)+'</td><td class="r num '+cls(c)+'">'+sgn(c)+'</td><td class="r num '+cls(d)+'">'+sgn(d)+'</td></tr>';
+    });
+    g('c-tbl').innerHTML=rows;
+  }
+
+  function all(){ size(); pledge(); combo(); }
+  [].slice.call(document.querySelectorAll('input.fill')).forEach(function(e){ e.addEventListener('input',all); });
+  all();
+
+  /* ---------- 分頁 ---------- */
+  var tabs=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var ids=tabs.map(function(a){return a.getAttribute('href').slice(1);});
+  var secs=ids.map(function(id){return document.getElementById(id);});
+  var nav=document.querySelector('nav.toc');
+  function show(id,scroll){
+    var i=ids.indexOf(id); if(i<0) i=0;
+    secs.forEach(function(s,k){ s.hidden = (k!==i); });
+    tabs.forEach(function(a,k){ if(k===i){ a.setAttribute('aria-current','page'); a.scrollIntoView({block:'nearest',inline:'center'}); } else { a.removeAttribute('aria-current'); } });
+    try{ history.replaceState(null,'','#'+ids[i]); }catch(e){}
+    if(scroll){ nav.scrollIntoView({block:'start'}); }
+  }
+  tabs.forEach(function(a){ a.addEventListener('click',function(ev){ ev.preventDefault(); show(a.getAttribute('href').slice(1),true); }); });
+  secs.forEach(function(s,k){
+    var d=document.createElement('div'); d.className='pager';
+    var prev=document.createElement('button'); prev.type='button';
+    var next=document.createElement('button'); next.type='button';
+    if(k>0){ prev.textContent='← '+tabs[k-1].textContent; prev.addEventListener('click',function(){ show(ids[k-1],true); }); } else { prev.hidden=true; }
+    if(k<secs.length-1){ next.textContent=tabs[k+1].textContent+' →'; next.addEventListener('click',function(){ show(ids[k+1],true); }); } else { next.hidden=true; }
+    d.appendChild(prev); d.appendChild(next); s.appendChild(d);
+  });
+  window.addEventListener('hashchange',function(){ show(location.hash.slice(1),false); });
+  show(location.hash.slice(1),false);
+})();
+</script>
+</body>
+</html>
